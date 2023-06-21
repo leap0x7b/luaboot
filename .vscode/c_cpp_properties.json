@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "name": "UEFI",
+            "includePath": [
+                "/usr/include",
+                "include",
+                "external/tinyefi/include"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "gnu2x",
+            "cppStandard": "gnu++20",
+            "intelliSenseMode": "windows-clang-x64",
+            "mergeConfigurations": false,
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/**"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "compilerArgs": [
+                "--target",
+                "x86_64-uefi-windows-msvc",
+                "-nostdlib",
+                "-ffreestanding",
+                "-fshort-wchar"
+            ]
+        }
+    ],
+    "version": 4
+}

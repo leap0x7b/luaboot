@@ -1,0 +1,3 @@
+[submodule "external/tinyefi"]
+	path = external/tinyefi
+	url = https://github.com/Abb1x/tinyefi
