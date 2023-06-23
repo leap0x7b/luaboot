@@ -1,4 +1,7 @@
 [submodule "external/tinyefi"]
 	path = external/tinyefi
 	url = https://github.com/Abb1x/tinyefi
-
+[submodule "external/lua"]
+	path = external/lua
+	url = https://github.com/Lua/Lua.git
+	branch = v5.4.6
