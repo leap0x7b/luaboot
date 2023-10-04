@@ -1,7 +1,9 @@
-[submodule "external/tinyefi"]
-	path = external/tinyefi
-	url = https://github.com/Abb1x/tinyefi
-[submodule "external/lua"]
-	path = external/lua
-	url = https://github.com/Lua/Lua.git
-	branch = v5.4.6
+[submodule "external/arith64"]
+	path = external/arith64
+	url = https://github.com/glitchub/arith64
+[submodule "external/gdtoa"]
+	path = external/gdtoa
+	url = https://github.com/embeddedartistry/gdtoa
+[submodule "external/limine-efi"]
+	path = external/limine-efi
+	url = https://github.com/limine-bootloader/limine-efi
