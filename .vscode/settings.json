@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "chrono": "c",
+        "typeinfo": "c",
+        "cstdlib": "c",
+        "stdio.h": "c"
+    }
+}

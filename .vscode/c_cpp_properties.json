@@ -5,9 +5,9 @@
             "includePath": [
                 "/usr/include",
                 "include",
-                "external/tinyefi/include"
+                "external/limine-efi/inc",
             ],
-            "compilerPath": "/usr/bin/clang",
+            "compilerPath": "clang",
             "cStandard": "gnu2x",
             "cppStandard": "gnu++20",
             "intelliSenseMode": "windows-clang-x64",

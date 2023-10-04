@@ -12,8 +12,12 @@ char *strchr(const char *str, int ch);
 char *strcpy(char *dest, const char *src);
 char *strncpy(char *dest, const char *src, size_t n);
 size_t strlen(const char *str);
+char *strpbrk(const char *s, const char *chrs);
 int strcmp(const char *s1, const char *s2);
 int strncmp(const char *s1, const char *s2, size_t n);
 size_t strspn(const char *s1, const char *s2);
 size_t strcspn(const char *s1, const char *s2);
+char *strstr(const char *str, const char *pattern);
 char *strtok(char *str, const char *delim);
+
+#define strcoll(a, b) strcmp(a, b)

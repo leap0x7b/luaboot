@@ -15,7 +15,7 @@ stuff.
 
 ## Acknowledgements
 Some files are taken and modified from [Limine](https://github.com/limine-bootloader/limine) as well as the
-rewrite branch of [FaruOS](https://github.com/leap0x7b/faruos/tree/rewrite).
+old rewrite branch of [FaruOS (now Kora)](https://github.com/kora/ydin/tree/rewrite-old).
 
 ## License
 The files included in this repository are licensed under the [MIT license](https://opensource.org/licenses/MIT).

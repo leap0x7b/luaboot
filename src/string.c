@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 #include <luaboot/string.h>
 
 void *memchr(const void *s, int c, size_t size) {
@@ -97,6 +99,16 @@ size_t strlen(const char *str) {
     return len;
 }
 
+char *strpbrk(const char *s, const char *chrs) {
+    size_t n = 0;
+    while (s[n]) {
+        if (strchr(chrs, s[n]))
+            return (char*)(s + n);
+        n++;
+    }
+    return NULL;
+}
+
 int strcmp(const char *s1, const char *s2) {
     for (size_t i = 0; ; i++) {
         char c1 = s1[i], c2 = s2[i];
@@ -139,6 +151,22 @@ size_t strcspn(const char *s1, const char *s2) {
     }
 
     return ret;
+}
+
+char *strstr(const char *str, const char *pattern) {
+    for (size_t i = 0; str[i]; i++) {
+        bool found = true;
+        for (size_t j = 0; pattern[j]; j++) {
+            if (!pattern[j] || str[i + j] == pattern[j]) continue;
+
+            found = false;
+            break;
+        }
+
+        if (found) return (char*)(&str[i]);
+    }
+
+    return NULL;
 }
 
 char *strtok(char *str, const char *delim) {

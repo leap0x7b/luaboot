@@ -1,6 +1,125 @@
 #include <stdint.h>
 #include <stddef.h>
+#include <errno.h>
+#include <luaboot/efi.h>
+#include <luaboot/e9.h>
+#include <luaboot/string.h>
 #include <luaboot/stdlib.h>
+
+int atoi(const char *str) {
+    return (int)atol(str);
+};
+
+int64_t atol(const char *str) {
+    int64_t sign = 1;
+
+    if (!str || !*str)
+        return 0;
+
+    if (*str == '-') {
+        sign = -1;
+        str++;
+    }
+
+    if (str[0] == '0') {
+        if (str[1] == 'x')
+            return strtol(str + 2, NULL, 16) * sign;
+        if (str[1] >= '0' && str[1] <= '7')
+            return strtol(str, NULL, 8) * sign;
+    }
+
+    return strtol(str, NULL, 10) * sign;
+};
+
+int64_t strtol(const char *str, char **dest, int base) {
+    int64_t v = 0;
+    int64_t sign = 1;
+
+    if (!str || !*str)
+        return 0;
+
+    if (*str == '-') {
+        sign = -1;
+        str++;
+    }
+
+    while (!(*str < '0' || (base < 10 && *str >= base + '0') || (base >= 10 && ((*str > '9' && *str < 'A') ||
+            (*str > 'F' && *str < 'a') || *str > 'f')))) {
+        v *= base;
+        if (*str >= '0' && *str <= (base < 10 ? base + '0' : '9'))
+            v += (*str) - '0';
+        else if (base == 16 && *str >= 'a' && *str <= 'f')
+            v += (*str) - 'a' + 10;
+        else if (base == 16 && *str >= 'A' && *str <= 'F')
+            v += (*str) - 'A' + 10;
+        str++;
+    }
+
+    if (dest)
+        *dest = (char *)str;
+
+    return v * sign;
+}
+
+
+const char* getenv(const char *name) {
+    e9_printf("todo: getenv(%s)\n", name);
+    return NULL;
+}
+
+int system(const char *cmd) {
+    e9_printf("$ %s\ncan't do system()\n", cmd);
+    return 1;
+}
+
+void *malloc(size_t size) {
+    void *ret = NULL;
+
+    EFI_STATUS status = BS->AllocatePool(EfiLoaderData, size, &ret);
+    if (status != EFI_SUCCESS || !ret) {
+        errno = ENOMEM;
+        ret = NULL;
+    }
+
+    return ret;
+}
+
+void *calloc(size_t num, size_t size) {
+    void *ret = malloc(num * size);
+    if (ret) memset(ret, 0, num * size);
+    return ret;
+}
+
+void *realloc(void *ptr, size_t size) {
+    void *ret = NULL;
+ 
+    if (!ptr) return malloc(size);
+    if (!size) {
+        free(ptr);
+        return NULL;
+    }
+
+    EFI_STATUS status = BS->AllocatePool(EfiLoaderData, size, &ret);
+    if (status != EFI_SUCCESS || !ret) {
+        errno = ENOMEM;
+        ret = NULL;
+    }
+
+    memcpy(ret, (void*)ptr, size);
+    free(ptr);
+
+    return ret;
+}
+
+void free(void *ptr) {
+    if (!ptr) return;
+    EFI_STATUS status = BS->FreePool(ptr);
+    if (status != EFI_SUCCESS) errno = ENOMEM;
+}
+
+int abs(int i) {
+    return i < 0 ? -i : i;
+}
 
 int mblen(const char *str, size_t size) {
     if (str == NULL) return 0;
@@ -99,4 +218,14 @@ size_t wcstombs(char *dest, const wchar_t *src, size_t size) {
     }
     *dest = 0;
     return (size_t)(dest - orig);
+}
+
+void exit(int _) {
+    (void)_;
+    abort();
+}
+
+void abort(void) {
+    while (1)
+        asm volatile ("hlt");
 }

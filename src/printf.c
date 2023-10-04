@@ -4,7 +4,7 @@
 #include <luaboot/nanoprintf_config.h>
 #define NANOPRINTF_IMPLEMENTATION
 #include <luaboot/nanoprintf.h>
-#include <tinyefi/tinyefi.h>
+#include <luaboot/efi.h>
 
 int snprintf(char* buffer, size_t count, const char* format, ...) {
     va_list args;
