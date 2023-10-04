@@ -7,3 +7,6 @@
 [submodule "external/limine-efi"]
 	path = external/limine-efi
 	url = https://github.com/limine-bootloader/limine-efi
+[submodule "external/flanterm"]
+	path = external/flanterm
+	url = https://github.com/mintsuki/flanterm

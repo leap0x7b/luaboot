@@ -7,6 +7,7 @@
 #include <luaboot/printf.h>
 #include <luaboot/e9.h>
 #include <luaboot/efi.h>
+#include <luaboot/flanterm.h>
 
 #define meta_outchar_const (FILE*)-1
 
@@ -121,10 +122,21 @@ void* fgets(void* s, uint64_t n, FILE* stream) {
 static int64_t uefi_tty_read(void *arg, void *buf, uint64_t off, uint64_t max) {
     for (uint64_t i = 0; i < max; i++) {
 		EFI_INPUT_KEY key = efi_console_read_key();
-		char c[4];
-		wctomb(c, key.UnicodeChar);
-		for (int j = i; j < i + strlen(c); j++)
-        	((uint8_t *)buf)[j] = c[j];
+		char *c = malloc(512);
+		//wctomb(c, key.UnicodeChar);
+		if (key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
+			c = "\n";
+			fprintf(stdout, "\n");
+		} else if (key.UnicodeChar == CHAR_BACKSPACE) {
+			c = "\b";
+			fprintf(stdout, "\b \b");
+		} else {
+			snprintf(c, 512, "%lc", key.UnicodeChar);
+			fprintf(stdout, "%s", c);
+		}
+
+		for (int j = 0; j < strlen(c); j++)
+        	((uint8_t *)buf)[i + j] = c[j];
     }
     return max;
 }
@@ -136,6 +148,14 @@ static int64_t uefi_tty_write(void *arg, const void *buf, uint64_t off, uint64_t
 			efi_console_printf("\r\n");
 		else
 			efi_console_printf("%c", ch);
+    }
+    return max;
+}
+
+static int64_t flanterm_tty_write(void *arg, const void *buf, uint64_t off, uint64_t max) {
+    for (uint64_t i = 0; i < max;i++) {
+		uint8_t ch = ((uint8_t *)buf)[i];
+		flanterm_printf("%c", ch);
     }
     return max;
 }
@@ -161,6 +181,12 @@ static int64_t serial_write(void *arg, const void *buf, uint64_t off, uint64_t m
 _Bool _fopen(FILE *file, const char *path) {
     if (!strcmp(path, "/dev/console")) {
         file->read = uefi_tty_read;
+        file->write = flanterm_tty_write;
+        file->_is_text = 1;
+        file->_is_stream = 1;
+        return 1;
+    } else if (!strcmp(path, "/dev/ueficonsole")) {
+        file->read = uefi_tty_read;
         file->write = uefi_tty_write;
         file->_is_text = 1;
         file->_is_stream = 1;
@@ -171,12 +197,12 @@ _Bool _fopen(FILE *file, const char *path) {
         file->_is_stream = 1;
         return 1;
     } else if (!strcmp(path, "/dev/stdout")) {
-        file->write = uefi_tty_write;
+        file->write = flanterm_tty_write;
         file->_is_text = 1;
         file->_is_stream = 1;
         return 1;
     } else if (!strcmp(path, "/dev/stderr")) {
-        file->write = uefi_tty_write;
+        file->write = flanterm_tty_write;
         file->_is_text = 1;
         file->_is_stream = 1;
         return 1;

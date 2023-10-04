@@ -74,10 +74,10 @@ $(LUABOOT): $(LUABOOT_ELF)
 	@echo -e "[OBJCOPY]\t$(@:$(BUILDDIR)/%=%)"
 	$(Q)$(OBJCOPY) -O binary $< $@
 
-$(LUABOOT_ELF): $(BUILDDIR)/limine-efi/crt0-efi-x86_64.S.o $(BUILDDIR)/limine-efi/reloc_x86_64.c.o $(BUILDDIR)/arith64/arith64.c.o $(LIBM_OBJ) $(LUA_OBJS) $(GDTOA_OBJS) $(OBJ) $(ASMOBJ)
+$(LUABOOT_ELF): $(BUILDDIR)/limine-efi/crt0-efi-x86_64.S.o $(BUILDDIR)/limine-efi/reloc_x86_64.c.o $(BUILDDIR)/arith64/arith64.c.o $(LIBM_OBJ) $(GDTOA_OBJS) $(BUILDDIR)/flanterm/flanterm.c.o $(BUILDDIR)/flanterm/backends/fb.c.o $(LUA_OBJS) $(OBJ) $(ASMOBJ)
 	@$(MKCWD)
 	@echo -e "[LD]\t\t$(@:$(BUILDDIR)/%=%)"
-	$(Q)$(LD) $(BUILDDIR)/limine-efi/crt0-efi-x86_64.S.o $(BUILDDIR)/limine-efi/reloc_x86_64.c.o $(BUILDDIR)/arith64/arith64.c.o $(LIBM_OBJ) $(LUA_OBJS) $(GDTOA_OBJS) $(OBJ) $(ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -o $@
+	$(Q)$(LD) $(BUILDDIR)/limine-efi/crt0-efi-x86_64.S.o $(BUILDDIR)/limine-efi/reloc_x86_64.c.o $(BUILDDIR)/arith64/arith64.c.o $(LIBM_OBJ) $(GDTOA_OBJS) $(BUILDDIR)/flanterm/flanterm.c.o $(BUILDDIR)/flanterm/backends/fb.c.o $(LUA_OBJS) $(OBJ) $(ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -o $@
 
 -include $(DEPS) $(ASMDEPS) $(LIBM_DEPS)
 
@@ -116,6 +116,11 @@ $(BUILDDIR)/gdtoa/%.c.o: $(EXTERNALDIR)/gdtoa/src/%.c
 	@echo -e "[CC]\t\t$(<:$(EXTERNALDIR)/%=%)"
 	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
 
+$(BUILDDIR)/flanterm/%.c.o: $(EXTERNALDIR)/flanterm/%.c
+	@$(MKCWD)
+	@echo -e "[CC]\t\t$(<:$(EXTERNALDIR)/%=%)"
+	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
+
 $(BUILDDIR)/lua/%.c.o: $(EXTERNALDIR)/lua/%.c
 	@$(MKCWD)
 	@echo -e "[CC]\t\t$(<:$(EXTERNALDIR)/%=%)"
@@ -125,7 +130,7 @@ run: all
 	@echo -e "[QEMU]\t\t$(LUABOOT:$(BUILDDIR)/%=%)"
 	$(Q)mkdir -p build/efi-root/EFI/BOOT
 	$(Q)cp $(LUABOOT) build/efi-root/EFI/BOOT/BOOTX64.EFI
-	$(Q)$(QEMU) -m $(QEMUMEMSIZE) $(QEMUFLAGS) -hda fat:rw:build/efi-root -bios ../kora/headstart/zig-cache/edk2-x86_64.fd -debugcon stdio
+	$(Q)$(QEMU) -m $(QEMUMEMSIZE) $(QEMUFLAGS) -hda fat:rw:build/efi-root -bios ../kora/headstart/zig-cache/edk2-x86_64.fd
 
 clean:
 	$(Q)$(RM)r $(BUILDDIR)

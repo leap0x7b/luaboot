@@ -16,6 +16,7 @@ void efi_init(EFI_HANDLE handle, EFI_SYSTEM_TABLE *system_table) {
 }
 
 void efi_console_reset(void) {
+    ST->ConOut->Reset(ST->ConOut, false);
     ST->ConIn->Reset(ST->ConIn, false);
 }
 

@@ -5,7 +5,8 @@
             "includePath": [
                 "/usr/include",
                 "include",
-                "external/limine-efi/inc",
+                "external",
+                "external/limine-efi/inc"
             ],
             "compilerPath": "clang",
             "cStandard": "gnu2x",

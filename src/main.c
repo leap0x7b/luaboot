@@ -2,6 +2,7 @@
 #include <luaboot/string.h>
 #include <luaboot/e9.h>
 #include <luaboot/printf.h>
+#include <luaboot/flanterm.h>
 #include <luaboot/stdlib.h>
 #include <stdio.h>
 #include <luaboot/efi.h>
@@ -433,7 +434,7 @@ static int handle_luainit (lua_State *L) {
 
 #define lua_initreadline(L)  ((void)L)
 #define lua_readline(L,b,p) \
-        ((void)L, efi_console_printf(p),  /* show prompt */ \
+        ((void)L, fprintf(stdout, p),  /* show prompt */ \
         fgets(b, LUA_MAXINPUT, stdin) != NULL)  /* get line */
 #define lua_saveline(L,line)	{ (void)L; (void)line; }
 #define lua_freeline(L,b)	{ (void)L; (void)b; }
@@ -652,19 +653,32 @@ static int pmain (lua_State *L) {
 
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     efi_init(ImageHandle, SystemTable);
+    EFI_STATUS status;
 
     efi_console_clear();
     efi_console_reset();
     efi_console_show_cursor();
 
-    stdin = fopen("/dev/stdin", "r");
-    stdout = fopen("/dev/stdout", "w");
-    stderr = fopen("/dev/stderr", "w");
+    EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+    EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
+    
+    status = BS->LocateProtocol(&gop_guid, NULL, (void**)&gop);
+    if (EFI_ERROR(status)) {
+        efi_console_printf("luaboot: Unable to locate GOP! Using UEFI console as fallback...\n");
+        stdin = fopen("/dev/stdin", "r");
+        stdout = fopen("/dev/ueficonsole", "w");
+        stderr = fopen("/dev/ueficonsole", "w");
+    } else {
+        flanterm_init(gop);
+        stdin = fopen("/dev/stdin", "r");
+        stdout = fopen("/dev/stdout", "w");
+        stderr = fopen("/dev/stderr", "w");
+    }
 
     int argc = 1;
     char *argv[] = {"luaboot", NULL};
 
-  int status, result;
+  int result;
   lua_State *L = luaL_newstate();  /* create state */
   if (L == NULL) {
     l_message(argv[0], "cannot create state: not enough memory");
@@ -678,8 +692,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   result = lua_toboolean(L, -1);  /* get result */
   report(L, status);
   lua_close(L);
-  //return (result && status == LUA_OK) ? EFI_SUCCESS : EFI_ABORTED;
-    while (true) {
+  return (result && status == LUA_OK) ? EFI_SUCCESS : EFI_ABORTED;
+    /*while (true) {
         asm volatile ("hlt");
-    }
+    }*/
 }
