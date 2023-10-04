@@ -9,13 +9,14 @@
 #include <luaboot/efi.h>
 #include <luaboot/flanterm.h>
 
-#define meta_outchar_const (FILE*)-1
+#define _stdin (FILE*)-1
+#define _stdout (FILE*)-2
 
-FILE *stdin = NULL, *stdout = meta_outchar_const, *stderr = meta_outchar_const;
+FILE *stdin = _stdin, *stdout = _stdout, *stderr = _stdout;
 
 static void _write_char(FILE* file, char ch) {
 	errno = 0;
-	if (file == meta_outchar_const) {
+	if (file == _stdout) {
 		if (ch == '\n')
 			efi_console_printf("\r\n");
 		else
@@ -58,12 +59,56 @@ int fprintf(FILE* out, const char* format, ...) {
     return ret;
 }
 
-size_t fwrite(const void *restrict ptr, size_t size, size_t nitems, FILE *restrict stream) {
+size_t fread(void *ptr, size_t size, size_t count, FILE *restrict stream) {
 	errno = 0;
-    for (size_t i = 0; i < (size * nitems); i++) {
-        _write_char(stream, *((char*)(ptr) + i));
+	if (stream == _stdin) {
+		EFI_INPUT_KEY key = efi_console_read_key();
+		//wctomb(c, key.UnicodeChar);
+		if (key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
+			ptr = "\n";
+			fprintf(stdout, "\n");
+		} else if (key.UnicodeChar == CHAR_BACKSPACE) {
+			ptr = "\b";
+			fprintf(stdout, "\b \b");
+		} else {
+			snprintf(ptr, 512, "%lc", key.UnicodeChar);
+			fprintf(stdout, "%s", ptr);
+		}
+	} else {
+		if (!stream->_can_read) {
+			errno = EINVAL;
+			return 0;
+		}
+		if (stream->_is_stream) {
+			return stream->read(stream->arg, ptr, 0, 1);
+		} else {
+			return stream->read(stream->arg, ptr, stream->off, size * count);
+		}
+	}
+	return size * count;
+}
+
+size_t fwrite(const void *restrict ptr, size_t size, size_t count, FILE *stream) {
+	errno = 0;
+    for (size_t i = 0; i < (size * count); i++) {
+        _write_char(stream, *((char *)(ptr) + i));
     }
-    return (size) * (nitems);
+    return (size) * (count);
+}
+
+int fclose(FILE *stream) {
+	stream->close(stream->arg);
+	return 0;
+}
+
+int fseek(FILE *stream, long offset, int mode) {
+	stream->off = stream->seek_lookup(stream->arg, mode, 0, offset);
+	return stream->seek_lookup(stream->arg, SEEK_SET, stream->off, 0);
+}
+
+int ftell(FILE *stream) {
+	stream->off = stream->seek_lookup(stream->arg, SEEK_CUR, 0, 0);
+	return stream->seek_lookup(stream->arg, SEEK_SET, stream->off, 0);
 }
 
 int getc(FILE *stream) {
@@ -105,7 +150,7 @@ void* fgets(void* s, uint64_t n, FILE* stream) {
             *data++ = 0;
             return s;
         }
-        if (chr == '\x7f' && (stream == meta_outchar_const || stream->_is_text)) {
+        if (chr == '\b' && (stream == _stdout || stream->_is_text)) {
             // backspace
             if (!c) continue;
             c--;
@@ -141,7 +186,7 @@ static int64_t uefi_tty_read(void *arg, void *buf, uint64_t off, uint64_t max) {
     return max;
 }
 
-static int64_t uefi_tty_write(void *arg, const void *buf, uint64_t off, uint64_t max) {
+static int64_t uefi_tty_write(void *arg, void *buf, uint64_t off, uint64_t max) {
     for (uint64_t i = 0; i < max;i++) {
 		uint8_t ch = ((uint8_t *)buf)[i];
 		if (ch == '\n')
@@ -152,7 +197,7 @@ static int64_t uefi_tty_write(void *arg, const void *buf, uint64_t off, uint64_t
     return max;
 }
 
-static int64_t flanterm_tty_write(void *arg, const void *buf, uint64_t off, uint64_t max) {
+static int64_t flanterm_tty_write(void *arg, void *buf, uint64_t off, uint64_t max) {
     for (uint64_t i = 0; i < max;i++) {
 		uint8_t ch = ((uint8_t *)buf)[i];
 		flanterm_printf("%c", ch);
@@ -169,13 +214,56 @@ static int64_t serial_read(void *arg, void *buf, uint64_t off, uint64_t max) {
     return max;
 }
 
-static int64_t serial_write(void *arg, const void *buf, uint64_t off, uint64_t max) {
+static int64_t serial_write(void *arg, void *buf, uint64_t off, uint64_t max) {
 	EFI_SERIAL_IO_PROTOCOL *serial;
 	EFI_GUID serial_guid = EFI_SERIAL_IO_PROTOCOL_GUID;
 	EFI_STATUS status = BS->LocateProtocol(&serial_guid, NULL, (void**)&serial);
 	serial->SetAttributes(serial, 115200, 0, 1000, NoParity, 8, OneStopBit);
 	serial->Write(serial, &max, buf);
     return max;
+}
+
+static int64_t uefi_file_read(void *arg, void *buf, uint64_t off, uint64_t max) {
+	((EFI_FILE_HANDLE)arg)->Read((EFI_FILE_HANDLE)arg, &max, buf);
+	return max;
+}
+
+static int64_t uefi_file_write(void *arg, void *buf, uint64_t off, uint64_t max) {
+	((EFI_FILE_HANDLE)arg)->Write((EFI_FILE_HANDLE)arg, &max, buf);
+	return max;
+}
+
+static void uefi_file_close(void *arg) {
+	((EFI_FILE_HANDLE)arg)->Close((EFI_FILE_HANDLE)arg);
+}
+
+static uint64_t uefi_file_seek_lookup(void *arg, int mode, uint64_t pos, uint64_t offset) {
+	if (mode == SEEK_SET) {
+		((EFI_FILE_HANDLE)arg)->SetPosition(((EFI_FILE_HANDLE)arg), pos + offset);
+		return pos + offset;
+	} else if (mode == SEEK_CUR) {
+		uint64_t _pos = 0;
+		((EFI_FILE_HANDLE)arg)->GetPosition((EFI_FILE_HANDLE)arg, &_pos);
+		return _pos;
+	} else if (mode == SEEK_END) {
+		EFI_FILE_INFO file_info;
+		EFI_GUID file_info_guid = EFI_FILE_INFO_ID;
+		uint64_t buf_size = sizeof(EFI_FILE_INFO);
+		((EFI_FILE_HANDLE)arg)->GetInfo((EFI_FILE_HANDLE)arg, &file_info_guid, &buf_size, (void *)&file_info);
+		return file_info.FileSize;
+	}
+	return 0;
+}
+
+EFI_FILE_HANDLE uefi_get_volume(EFI_HANDLE image) {
+  	EFI_FILE_IO_INTERFACE *file_io;
+  	EFI_GUID fs_guid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
+  	EFI_FILE_HANDLE volume;
+
+  	BS->HandleProtocol(LIP->DeviceHandle, &fs_guid, (void **)&volume);
+  	file_io->OpenVolume(file_io, &volume);
+
+  	return volume;
 }
 
 _Bool _fopen(FILE *file, const char *path) {
@@ -212,7 +300,54 @@ _Bool _fopen(FILE *file, const char *path) {
         file->_is_text = 1;
         file->_is_stream = 1;
         return 1;
-    }
+    } else {
+		EFI_FILE_HANDLE volume = uefi_get_volume(IM);
+		EFI_FILE_HANDLE handle;
+		wchar_t tmp[512];
+    	mbstowcs(tmp, path, 511);
+
+		uint64_t flags = 0;
+		if (file->_can_read) flags |= EFI_FILE_MODE_READ;
+		if (file->_can_write) flags |= EFI_FILE_MODE_WRITE;
+		EFI_STATUS status = volume->Open(volume, &handle, tmp, flags, EFI_FILE_HIDDEN | EFI_FILE_SYSTEM);
+		if (EFI_ERROR(status)) {
+			switch (status) {
+				case EFI_NOT_FOUND:
+				    errno = ENOENT;
+    				return 0;
+				case EFI_ACCESS_DENIED:
+				    errno = EACCES;
+    				return 0;
+				case EFI_WRITE_PROTECTED:
+				    errno = EROFS;
+    				return 0;
+				case EFI_DEVICE_ERROR:
+				    errno = EIO;
+    				return 0;
+				case EFI_NO_MEDIA:
+				    errno = ENXIO;
+    				return 0;
+				case EFI_OUT_OF_RESOURCES:
+				    errno = ENOMEM;
+    				return 0;
+				case EFI_VOLUME_FULL:
+				    errno = ENOSPC;
+    				return 0;
+				case EFI_INVALID_PARAMETER:
+				    errno = EINVAL;
+    				return 0;
+				default:
+				    errno = EUNKERR;
+    				return 0;
+			}
+		}
+
+		file->seek_lookup = uefi_file_seek_lookup;
+		file->read = uefi_file_read;
+		file->write = uefi_file_write;
+		file->close = uefi_file_close;
+		file->arg = (void *)handle;
+	}
     errno = ENOENT;
     return 0;
 }
@@ -260,7 +395,7 @@ FILE *fopen(const char *pathname, const char *mode) {
 			errno = EINVAL;
 			return NULL;
 		}
-		if (append) f->off = f->seek_lookup(SEEK_END, 0, 0);
+		if (append) f->off = f->seek_lookup(f->arg, SEEK_END, 0, 0);
 		else f->off = 0;
 	} else {
 		free(f);
@@ -271,13 +406,9 @@ FILE *fopen(const char *pathname, const char *mode) {
 }
 
 void clearerr(FILE *) { e9_printf("todo: clearerr\n"); abort(); }
-int fclose(FILE *) { e9_printf("todo: fclose\n"); abort(); }
 int feof(FILE *) { e9_printf("todo: feof\n"); abort(); }
 int ferror(FILE *) { e9_printf("todo: ferror\n"); abort(); }
-size_t fread(void *, size_t, size_t, FILE *) { e9_printf("todo: fread\n"); abort(); }
 FILE *freopen(const char *, const char *, FILE *) { e9_printf("todo: freopen\n"); abort(); }
-int fseek(FILE *, long, int) { e9_printf("todo: fseek\n"); abort(); }
-int ftell(FILE *) { e9_printf("todo: ftell\n"); abort(); }
 int remove(const char *) { e9_printf("todo: remove\n"); abort(); }
 int rename(const char *, const char *) { e9_printf("todo: rename\n"); abort(); }
 int setvbuf(FILE*, char*, int, size_t) { e9_printf("todo: setvbuf\n"); abort(); }

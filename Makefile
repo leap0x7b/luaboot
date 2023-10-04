@@ -24,7 +24,7 @@ QEMU = qemu-system-x86_64
 CFLAGS ?= -Og -gdwarf
 ASFLAGS ?= -g -Fdwarf
 LDFLAGS ?=
-QEMUFLAGS ?= -no-reboot -no-shutdown
+QEMUFLAGS ?= -no-reboot -no-shutdown -debugcon stdio
 QEMUMEMSIZE ?= 2G
 
 CHARDFLAGS := \

@@ -272,12 +272,13 @@ static int npf_bin_len(npf_uint_t i);
 #endif
 
 #if NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS == 1
-  #ifdef _MSC_VER
+  /*#ifdef _MSC_VER
     #include <BaseTsd.h>
     typedef SSIZE_T ssize_t;
   #else
     #include <sys/types.h>
-  #endif
+  #endif*/
+  typedef long ssize_t;
 #endif
 
 #ifdef _MSC_VER

@@ -63,6 +63,10 @@ int64_t strtol(const char *str, char **dest, int base) {
 
 
 const char* getenv(const char *name) {
+    /*if (strcmp(name, "LUA_INIT")) {
+        return "@/boot/luaboot/config.lua";
+    }*/
+
     e9_printf("todo: getenv(%s)\n", name);
     return NULL;
 }
