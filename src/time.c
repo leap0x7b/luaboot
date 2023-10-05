@@ -4,7 +4,6 @@
 #include <luaboot/stdlib.h>
 
 static struct tm tm;
-time_t mktime_efi(EFI_TIME *t);
 
 /* from musl */
 static uint64_t year_to_secs(uint64_t year, int *is_leap) {
