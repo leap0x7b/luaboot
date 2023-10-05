@@ -3,10 +3,9 @@
         {
             "name": "UEFI",
             "includePath": [
-                "/usr/include",
-                "include",
-                "external",
-                "external/limine-efi/inc"
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/external",
+                "${workspaceFolder}/external/limine-efi/inc",
             ],
             "compilerPath": "clang",
             "cStandard": "gnu2x",

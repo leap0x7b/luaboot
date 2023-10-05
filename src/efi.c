@@ -7,14 +7,19 @@
 EFI_HANDLE IM;
 EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
+EFI_RUNTIME_SERVICES *RT;
 EFI_LOADED_IMAGE_PROTOCOL *LIP;
+EFI_GRAPHICS_OUTPUT_PROTOCOL *GOP;
 
 void efi_init(EFI_HANDLE handle, EFI_SYSTEM_TABLE *system_table) {
     IM = handle;
     ST = system_table;
     BS = system_table->BootServices;
+    RT = system_table->RuntimeServices;
     EFI_GUID lip_guid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
     BS->HandleProtocol(handle, &lip_guid, (void **)&LIP);
+    EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+    BS->LocateProtocol(&gop_guid, NULL, (void **)&GOP);
 }
 
 void efi_console_reset(void) {

@@ -83,7 +83,7 @@ static time_t mktime_efi(EFI_TIME *t) {
 
 struct tm *localtime (const time_t *) {
     EFI_TIME t;
-    ST->RuntimeServices->GetTime(&t, NULL);
+    RT->GetTime(&t, NULL);
 
     mktime_efi(&t);
     return &tm;
@@ -137,7 +137,7 @@ time_t time(time_t *time) {
     time_t ret;
     EFI_TIME t;
 
-    ST->RuntimeServices->GetTime(&t, NULL);
+    RT->GetTime(&t, NULL);
     ret = mktime_efi(&t);
 
     if (time)

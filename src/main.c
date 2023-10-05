@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdbool.h>
 #include <luaboot/string.h>
 #include <luaboot/e9.h>
@@ -5,6 +6,7 @@
 #include <luaboot/stdlib.h>
 #include <luaboot/stdio.h>
 #include <luaboot/efi.h>
+#include <luaboot/luamod.h>
 #include <lua/lua.h>
 #include <lua/lauxlib.h>
 #include <lua/lualib.h>
@@ -623,6 +625,8 @@ static int pmain (lua_State *L) {
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
   }
   luaL_openlibs(L);  /* open standard libraries */
+  luaL_requiref(L, "luaboot", luaopen_luaboot, 1);
+  lua_pop(L, 1);  /* remove lib */
   createargtable(L, argv, argc, script);  /* create table 'arg' */
   lua_gc(L, LUA_GCRESTART);  /* start GC... */
   lua_gc(L, LUA_GCGEN, 0, 0);  /* ...in generational mode */
@@ -658,17 +662,13 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     efi_console_reset();
     efi_console_show_cursor();
 
-    EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
-    EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
-    
-    status = BS->LocateProtocol(&gop_guid, NULL, (void**)&gop);
-    if (EFI_ERROR(status)) {
+    if (GOP == NULL) {
         efi_console_printf("luaboot: Unable to locate GOP! Using UEFI console as fallback...\n");
         stdin = fopen("/dev/stdin", "r");
         stdout = fopen("/dev/ueficonsole", "w");
         stderr = fopen("/dev/ueficonsole", "w");
     } else {
-        flanterm_init(gop);
+        flanterm_init(GOP);
         stdin = fopen("/dev/stdin", "r");
         stdout = fopen("/dev/stdout", "w");
         stderr = fopen("/dev/stderr", "w");

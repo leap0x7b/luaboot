@@ -90,6 +90,35 @@ char *strncpy(char *dest, const char *src, size_t n) {
     return dest;
 }
 
+char *strcat(char *dest, const char *src) {
+    char *s = dest;
+
+    if (src && dest) {
+        dest += strlen(dest);
+        while (*src) {
+            *dest++ = *src++;
+        }
+        *dest = 0;
+    }
+
+    return s;
+}
+
+char *strncat(char *dest, const char *src, size_t n) {
+    char *s = dest;
+    const char *e = src + n;
+
+    if (src && dest && n > 0) {
+        dest += strlen(dest);
+        while (*src && src < e) {
+            *dest++ = *src++;
+        }
+        *dest = 0;
+    }
+
+    return s;
+}
+
 size_t strlen(const char *str) {
     size_t len = 0;
 

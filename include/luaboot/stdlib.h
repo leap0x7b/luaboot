@@ -16,6 +16,8 @@ void *calloc(size_t num, size_t size);
 void *realloc(void *ptr, size_t size);
 void free(void *ptr);
 int abs(int i);
+void srand(uint64_t seed);
+uint64_t rand(void);
 int mblen(const char *str, size_t size);
 int mbtowc(wchar_t *dest, const char *src, size_t size);
 int wctomb(char *dest, wchar_t wc);
