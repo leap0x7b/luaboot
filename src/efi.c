@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <stdbool.h>
-#include <efi.h>
+#include <luaboot/stdlib.h>
+#include <luaboot/printf.h>
+#include <luaboot/efi.h>
 
 EFI_HANDLE IM;
 EFI_SYSTEM_TABLE *ST;
@@ -30,6 +32,24 @@ void efi_console_clear(void) {
 
 void efi_console_write(uint16_t *s) {
     ST->ConOut->OutputString(ST->ConOut, s);
+}
+
+static void _printf_callback(char c, void *) {
+    wchar_t *dest = malloc(4);
+    mbstowcs(dest, &c, 4);
+    ST->ConOut->OutputString(ST->ConOut, dest);
+}
+
+int efi_console_printf(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    int ret = vfctprintf(&_printf_callback, NULL, format, args);
+    va_end(args);
+    return ret;
+}
+
+int efi_console_vprintf(const char *format, va_list args) {
+    return vfctprintf(&_printf_callback, NULL, format, args);
 }
 
 void efi_console_show_cursor(void) {

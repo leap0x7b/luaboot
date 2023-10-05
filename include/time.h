@@ -1,5 +1,4 @@
 #pragma once
-
 #include <stdint.h>
 #include <string.h>
 
@@ -20,9 +19,9 @@ struct tm {
     uint64_t tm_isdst;
 };
 
-struct tm* gmtime(const time_t*);
-time_t time(time_t*);
-struct tm* localtime(const time_t*);
+struct tm *gmtime(const time_t *time);
+time_t time(time_t *);
+struct tm *localtime(const time_t *time);
 static inline clock_t clock() {
     return /* we spent approximately no time at all */ 0;
 }

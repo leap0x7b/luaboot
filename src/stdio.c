@@ -1,10 +1,9 @@
 #include <stdarg.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <errno.h>
+#include <luaboot/stdio.h>
 #include <luaboot/stdlib.h>
 #include <luaboot/string.h>
-#include <luaboot/printf.h>
 #include <luaboot/e9.h>
 #include <luaboot/efi.h>
 #include <luaboot/flanterm.h>
@@ -255,12 +254,12 @@ static uint64_t uefi_file_seek_lookup(void *arg, int mode, uint64_t pos, uint64_
 	return 0;
 }
 
-EFI_FILE_HANDLE uefi_get_volume(EFI_HANDLE image) {
+EFI_FILE_HANDLE uefi_get_volume() {
+  	EFI_GUID file_io_guid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
   	EFI_FILE_IO_INTERFACE *file_io;
-  	EFI_GUID fs_guid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
   	EFI_FILE_HANDLE volume;
 
-  	BS->HandleProtocol(LIP->DeviceHandle, &fs_guid, (void **)&volume);
+  	BS->HandleProtocol(LIP->DeviceHandle, &file_io_guid, (void **)&file_io);
   	file_io->OpenVolume(file_io, &volume);
 
   	return volume;
@@ -301,15 +300,15 @@ _Bool _fopen(FILE *file, const char *path) {
         file->_is_stream = 1;
         return 1;
     } else {
-		EFI_FILE_HANDLE volume = uefi_get_volume(IM);
+		EFI_FILE_HANDLE volume = uefi_get_volume();
 		EFI_FILE_HANDLE handle;
-		wchar_t tmp[512];
-    	mbstowcs(tmp, path, 511);
+		wchar_t *dest = malloc(strlen(path) * 2);
+    	mbstowcs(dest, path, strlen(path) * 2);
 
 		uint64_t flags = 0;
 		if (file->_can_read) flags |= EFI_FILE_MODE_READ;
 		if (file->_can_write) flags |= EFI_FILE_MODE_WRITE;
-		EFI_STATUS status = volume->Open(volume, &handle, tmp, flags, EFI_FILE_HIDDEN | EFI_FILE_SYSTEM);
+		EFI_STATUS status = volume->Open(volume, &handle, dest, flags, file->_can_read && !file->_can_write ? EFI_FILE_MODE_READ : 0);
 		if (EFI_ERROR(status)) {
 			switch (status) {
 				case EFI_NOT_FOUND:
@@ -347,6 +346,7 @@ _Bool _fopen(FILE *file, const char *path) {
 		file->write = uefi_file_write;
 		file->close = uefi_file_close;
 		file->arg = (void *)handle;
+		return 1;
 	}
     errno = ENOENT;
     return 0;
@@ -361,7 +361,6 @@ FILE *fopen(const char *pathname, const char *mode) {
 	}
 	f->_can_read = 0;
 	f->_can_write = 0;
-	f->_is_buffered = 0;
 	f->_is_text = 0;
 	f->_is_stream = 0;
 	uint8_t plus = 0, append = 0; 
@@ -405,9 +404,9 @@ FILE *fopen(const char *pathname, const char *mode) {
 	return f;
 }
 
-void clearerr(FILE *) { e9_printf("todo: clearerr\n"); abort(); }
+void clearerr(FILE *) { e9_printf("todo: clearerr\n"); }
 int feof(FILE *) { e9_printf("todo: feof\n"); abort(); }
-int ferror(FILE *) { e9_printf("todo: ferror\n"); abort(); }
+int ferror(FILE *) { e9_printf("todo: ferror\n"); return errno; }
 FILE *freopen(const char *, const char *, FILE *) { e9_printf("todo: freopen\n"); abort(); }
 int remove(const char *) { e9_printf("todo: remove\n"); abort(); }
 int rename(const char *, const char *) { e9_printf("todo: rename\n"); abort(); }

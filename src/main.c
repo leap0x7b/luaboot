@@ -1,10 +1,9 @@
 #include <stdbool.h>
 #include <luaboot/string.h>
 #include <luaboot/e9.h>
-#include <luaboot/printf.h>
 #include <luaboot/flanterm.h>
 #include <luaboot/stdlib.h>
-#include <stdio.h>
+#include <luaboot/stdio.h>
 #include <luaboot/efi.h>
 #include <lua/lua.h>
 #include <lua/lauxlib.h>
