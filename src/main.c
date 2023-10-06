@@ -627,6 +627,7 @@ static int pmain (lua_State *L) {
   luaL_openlibs(L);  /* open standard libraries */
   luaL_requiref(L, "luaboot", luaopen_luaboot, 1);
   lua_pop(L, 1);  /* remove lib */
+  dofile(L, "/boot/luaboot/config.lua");
   createargtable(L, argv, argc, script);  /* create table 'arg' */
   lua_gc(L, LUA_GCRESTART);  /* start GC... */
   lua_gc(L, LUA_GCGEN, 0, 0);  /* ...in generational mode */

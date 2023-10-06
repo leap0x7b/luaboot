@@ -61,14 +61,23 @@ int64_t strtol(const char *str, char **dest, int base) {
     return v * sign;
 }
 
-
 const char* getenv(const char *name) {
-    /*if (strcmp(name, "LUA_INIT")) {
-        return "@/boot/luaboot/config.lua";
-    }*/
+    uint8_t tmp[EFI_MAXIMUM_VARIABLE_SIZE], *ret;
+    uint32_t len;
 
-    e9_printf("todo: getenv(%s)\n", name);
-    return NULL;
+    wchar_t wcname[256];
+    mbstowcs((wchar_t *)&wcname, name, 256);
+
+    EFI_GUID guid = EFI_GLOBAL_VARIABLE;
+    EFI_STATUS status = RT->GetVariable((wchar_t*)&wcname, &guid, NULL, &len, &tmp);
+    if (EFI_ERROR(status) || len < 1 || !(ret = malloc((len) + 1))) {
+        return NULL;
+    }
+
+    memcpy(ret, tmp, len);
+    ret[len] = 0;
+
+    return ret;
 }
 
 int system(const char *cmd) {
@@ -224,9 +233,8 @@ size_t wcstombs(char *dest, const wchar_t *src, size_t size) {
     return (size_t)(dest - orig);
 }
 
-void exit(int _) {
-    (void)_;
-    abort();
+void exit(int status) {
+    BS->Exit(IM, !status ? 0 : (status < 0 ? EFIERR(-status) : EFIERR(status)), 0, NULL);
 }
 
 void abort(void) {

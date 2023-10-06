@@ -370,7 +370,7 @@ _Bool _fopen(FILE *file, const char *path) {
 		EFI_FILE_HANDLE volume = uefi_get_volume();
 		EFI_FILE_HANDLE handle;
 		wchar_t *dest = malloc(strlen(path) * 2);
-		char *tmp = path;
+		const char *tmp = path;
 		char *i = strchr(tmp, '/');
     	while (i) {
     	    *i = '\\';
@@ -458,6 +458,8 @@ FILE *fopen(const char *pathname, const char *mode) {
 			case 'a':
 				f->_can_write = 1;
 				append = 1;
+				break;
+			case 'b':
 				break;
 			default:
 				free(f);

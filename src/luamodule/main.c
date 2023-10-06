@@ -201,6 +201,9 @@ int luaopen_luaboot(lua_State *L) {
     luaL_setfuncs(L, fb_meth, 0);
     lua_setfield(L, -2, "framebuffer");
 
+    lua_newtable(L);
+    lua_setfield(L, -2, "config");
+
     luaL_setfuncs(L, lib, 0);
 
     return 1;
