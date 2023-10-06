@@ -117,6 +117,10 @@ int ftell(FILE *stream) {
 	return stream->seek_lookup(stream->arg, SEEK_CUR, 0, 0);
 }
 
+int feof(FILE *stream) {
+	return stream->off == stream->seek_lookup(stream->arg, SEEK_END, 0, 0);
+}
+
 int getc(FILE *stream) {
 	errno = stream->_errno = 0;
 	if (!stream) {
@@ -366,7 +370,13 @@ _Bool _fopen(FILE *file, const char *path) {
 		EFI_FILE_HANDLE volume = uefi_get_volume();
 		EFI_FILE_HANDLE handle;
 		wchar_t *dest = malloc(strlen(path) * 2);
-    	mbstowcs(dest, path, strlen(path) * 2);
+		char *tmp = path;
+		char *i = strchr(tmp, '/');
+    	while (i) {
+    	    *i = '\\';
+    	    i = strchr(tmp, '/');
+    	}
+    	mbstowcs(dest, tmp, strlen(tmp) * 2);
 
 		uint64_t flags = 0;
 		if (file->_can_read) flags |= EFI_FILE_MODE_READ;
@@ -492,7 +502,6 @@ int remove(const char *path) {
 	return 0;
 }
 
-int feof(FILE *) { errno = EPERM; e9_printf("todo: feof\n"); return 0; }
 FILE *freopen(const char *, const char *, FILE *stream) { errno = EPERM; e9_printf("todo: freopen\n"); return stream; }
 int rename(const char *, const char *) { errno = EPERM; e9_printf("todo: rename\n"); return 0; }
 int setvbuf(FILE*, char*, int, size_t) { errno = EPERM; e9_printf("todo: setvbuf\n"); return 0; }
