@@ -107,7 +107,7 @@ int fseek(FILE *stream, long offset, int mode) {
 		stream->off = off;
 		return off;
 	} else {
-		int off = stream->seek_lookup(stream->arg, mode, offset, 0);
+		int off = stream->seek_lookup(stream->arg, mode, 0, offset);
 		stream->off = stream->seek(stream->arg, off, 0);
 		return off;
 	}
@@ -286,17 +286,18 @@ static void uefi_file_remove(void *arg) {
 	((EFI_FILE_HANDLE)arg)->Delete((EFI_FILE_HANDLE)arg);
 }
 
-static uint64_t uefi_file_seek_lookup(void *arg, int mode, uint64_t pos, uint64_t offset) {
+static uint64_t uefi_file_seek_lookup(void *arg, int mode, uint64_t _, uint64_t offset) {
+	(void)_;
 	if (mode == SEEK_CUR) {
-		uint64_t _pos = 0;
-		((EFI_FILE_HANDLE)arg)->GetPosition((EFI_FILE_HANDLE)arg, &_pos);
-		return _pos;
+		uint64_t pos = 0;
+		((EFI_FILE_HANDLE)arg)->GetPosition((EFI_FILE_HANDLE)arg, &pos);
+		return pos + offset;
 	} else if (mode == SEEK_END) {
 		EFI_FILE_INFO file_info;
 		EFI_GUID file_info_guid = EFI_FILE_INFO_ID;
 		uint64_t buf_size = sizeof(EFI_FILE_INFO);
 		((EFI_FILE_HANDLE)arg)->GetInfo((EFI_FILE_HANDLE)arg, &file_info_guid, &buf_size, (void *)&file_info);
-		return file_info.FileSize;
+		return file_info.FileSize + offset;
 	}
 	return 0;
 }

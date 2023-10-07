@@ -1,7 +1,7 @@
 #pragma once
 
 extern int errno;
-char* strerror(int error);
+char *strerror(int error);
 
 #define EOK 0
 #define EPERM 1

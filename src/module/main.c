@@ -167,6 +167,7 @@ static const struct luaL_Reg lib[] = {
     { "outl", outl },
     { "inl", inl },
     { "cpuid", cpuid },
+    { "parseElf", parse_elf },
     { NULL, NULL }
 };
 

@@ -61,9 +61,9 @@ int64_t strtol(const char *str, char **dest, int base) {
     return v * sign;
 }
 
-const char* getenv(const char *name) {
-    uint8_t tmp[EFI_MAXIMUM_VARIABLE_SIZE], *ret;
-    uint32_t len;
+const char *getenv(const char *name) {
+    char tmp[EFI_MAXIMUM_VARIABLE_SIZE], *ret;
+    size_t len;
 
     wchar_t wcname[256];
     mbstowcs((wchar_t *)&wcname, name, 256);
