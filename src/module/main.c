@@ -171,7 +171,85 @@ static const struct luaL_Reg lib[] = {
     { NULL, NULL }
 };
 
+static uint16_t linear_masks_to_bpp(uint32_t red_mask, uint32_t green_mask,
+                                    uint32_t blue_mask, uint32_t alpha_mask) {
+    uint32_t compound_mask = red_mask | green_mask | blue_mask | alpha_mask;
+    uint16_t ret = 32;
+    while ((compound_mask & (1 << 31)) == 0) {
+        ret--;
+        compound_mask <<= 1;
+    }
+    return ret;
+}
+
+static void linear_mask_to_mask_shift(uint8_t *mask, uint8_t *shift, uint32_t linear_mask) {
+    *shift = 0;
+    while ((linear_mask & 1) == 0) {
+        (*shift)++;
+        linear_mask >>= 1;
+    }
+    *mask = 0;
+    while ((linear_mask & 1) == 1) {
+        (*mask)++;
+        linear_mask >>= 1;
+    }
+}
+
 int luaopen_luaboot(lua_State *L) {
+    int bpp;
+    uint8_t red_mask_size;
+    uint8_t red_mask_shift;
+    uint8_t green_mask_size;
+    uint8_t green_mask_shift;
+    uint8_t blue_mask_size;
+    uint8_t blue_mask_shift;
+
+    switch (GOP->Mode->Info->PixelFormat) {
+        case PixelBlueGreenRedReserved8BitPerColor:
+            bpp = 32;
+            red_mask_size = 8;
+            red_mask_shift = 16;
+            green_mask_size = 8;
+            green_mask_shift = 8;
+            blue_mask_size = 8;
+            blue_mask_shift = 0;
+            break;
+        case PixelRedGreenBlueReserved8BitPerColor:
+            bpp = 32;
+            red_mask_size = 8;
+            red_mask_shift = 0;
+            green_mask_size = 8;
+            green_mask_shift = 8;
+            blue_mask_size = 8;
+            blue_mask_shift = 16;
+            break;
+        case PixelBitMask:
+            bpp = linear_masks_to_bpp(GOP->Mode->Info->PixelInformation.RedMask,
+                                      GOP->Mode->Info->PixelInformation.GreenMask,
+                                      GOP->Mode->Info->PixelInformation.BlueMask,
+                                      GOP->Mode->Info->PixelInformation.ReservedMask);
+            linear_mask_to_mask_shift(&red_mask_size,
+                                      &red_mask_shift,
+                                      GOP->Mode->Info->PixelInformation.RedMask);
+            linear_mask_to_mask_shift(&green_mask_size,
+                                      &green_mask_shift,
+                                      GOP->Mode->Info->PixelInformation.GreenMask);
+            linear_mask_to_mask_shift(&blue_mask_size,
+                                      &blue_mask_shift,
+                                      GOP->Mode->Info->PixelInformation.BlueMask);
+            break;
+        default:
+            // Just assume its an RGB framebuffer with 8 bits per color
+            bpp = 32;
+            red_mask_size = 8;
+            red_mask_shift = 0;
+            green_mask_size = 8;
+            green_mask_shift = 8;
+            blue_mask_size = 8;
+            blue_mask_shift = 16;
+            break;
+    }
+
     lua_newtable(L);
 
     luaL_newmetatable(L, "framebuffer");
@@ -193,11 +271,29 @@ int luaopen_luaboot(lua_State *L) {
     lua_pushinteger(L, GOP->Mode->Info->VerticalResolution);
     lua_setfield(L, -2, "height");
 
-    lua_pushinteger(L, 32);
+    lua_pushinteger(L, bpp);
     lua_setfield(L, -2, "depth");
 
-    lua_pushinteger(L, GOP->Mode->Info->HorizontalResolution * 4);
+    lua_pushinteger(L, GOP->Mode->Info->PixelsPerScanLine * (bpp / 8));
     lua_setfield(L, -2, "pitch");
+
+    lua_pushinteger(L, red_mask_size);
+    lua_setfield(L, -2, "red_mask_size");
+
+    lua_pushinteger(L, red_mask_shift);
+    lua_setfield(L, -2, "red_mask_shift");
+
+    lua_pushinteger(L, green_mask_size);
+    lua_setfield(L, -2, "green_mask_size");
+
+    lua_pushinteger(L, green_mask_shift);
+    lua_setfield(L, -2, "green_mask_shift");
+
+    lua_pushinteger(L, blue_mask_size);
+    lua_setfield(L, -2, "blue_mask_size");
+
+    lua_pushinteger(L, blue_mask_shift);
+    lua_setfield(L, -2, "blue_mask_shift");
 
     luaL_setfuncs(L, fb_meth, 0);
     lua_setfield(L, -2, "framebuffer");
