@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include <stdbool.h>
-#include <luaboot/string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <luaboot/e9.h>
 #include <luaboot/flanterm.h>
-#include <luaboot/stdlib.h>
-#include <luaboot/stdio.h>
 #include <luaboot/efi.h>
 #include <luaboot/luamod.h>
 #include <lua/lua.h>
@@ -12,7 +12,7 @@
 #include <lua/lualib.h>
 #include <lua/lprefix.h>
 
-void _fltused(void) {}
+int _fltused = 0;
 
 #if !defined(LUA_PROGNAME)
 #define LUA_PROGNAME		"luaboot"
@@ -627,7 +627,6 @@ static int pmain (lua_State *L) {
   luaL_openlibs(L);  /* open standard libraries */
   luaL_requiref(L, "luaboot", luaopen_luaboot, 1);
   lua_pop(L, 1);  /* remove lib */
-  dofile(L, "/boot/luaboot/config.lua");
   createargtable(L, argv, argc, script);  /* create table 'arg' */
   lua_gc(L, LUA_GCRESTART);  /* start GC... */
   lua_gc(L, LUA_GCGEN, 0, 0);  /* ...in generational mode */
@@ -641,6 +640,7 @@ static int pmain (lua_State *L) {
     if (handle_script(L, argv + script) != LUA_OK)
       return 0;  /* interrupt in case of error */
   }
+  dofile(L, "/boot/luaboot/config.lua");
   if (args & has_i)  /* -i option? */
     doREPL(L);  /* do read-eval-print loop */
   else if (script < 1 && !(args & (has_e | has_v))) { /* no active option? */
@@ -656,27 +656,28 @@ static int pmain (lua_State *L) {
 
 
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
-    efi_init(ImageHandle, SystemTable);
-    EFI_STATUS status;
+  efi_init(ImageHandle, SystemTable);
+  EFI_STATUS status;
 
-    efi_console_clear();
-    efi_console_reset();
-    efi_console_show_cursor();
+  efi_console_clear();
+  efi_console_reset();
+  efi_console_show_cursor();
 
-    if (GOP == NULL) {
-        efi_console_printf("luaboot: Unable to locate GOP! Using UEFI console as fallback...\n");
-        stdin = fopen("/dev/stdin", "r");
-        stdout = fopen("/dev/ueficonsole", "w");
-        stderr = fopen("/dev/ueficonsole", "w");
-    } else {
-        flanterm_init(GOP);
-        stdin = fopen("/dev/stdin", "r");
-        stdout = fopen("/dev/stdout", "w");
-        stderr = fopen("/dev/stderr", "w");
-    }
+  /*if (GOP == NULL) {
+    efi_console_printf("luaboot: Unable to locate GOP! Using UEFI console as fallback...\n");*/
+    stdin = fopen("/dev/stdin", "r");
+    stdout = fopen("/dev/ueficonsole", "w");
+    stderr = fopen("/dev/ueficonsole", "w");
+  /*} else {
+    efi_console_hide_cursor();
+    flanterm_init(GOP);
+    stdin = fopen("/dev/stdin", "r");
+    stdout = fopen("/dev/stdout", "w");
+    stderr = fopen("/dev/stderr", "w");
+  }*/
 
-    int argc = 1;
-    char *argv[] = {"luaboot", NULL};
+  int argc = 1;
+  char *argv[] = {"luaboot", NULL};
 
   int result;
   lua_State *L = luaL_newstate();  /* create state */
@@ -693,7 +694,4 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   report(L, status);
   lua_close(L);
   return (result && status == LUA_OK) ? EFI_SUCCESS : EFI_ABORTED;
-    /*while (true) {
-        asm volatile ("hlt");
-    }*/
 }

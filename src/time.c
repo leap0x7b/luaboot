@@ -1,7 +1,7 @@
+#include <stdlib.h>
 #include <time.h>
 #include <luaboot/e9.h>
 #include <luaboot/efi.h>
-#include <luaboot/stdlib.h>
 
 static struct tm tm;
 

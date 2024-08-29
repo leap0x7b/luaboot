@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <luaboot/efi.h>
 #include <luaboot/e9.h>
-#include <luaboot/string.h>
-#include <luaboot/stdlib.h>
 
 int atoi(const char *str) {
     return (int)atol(str);
@@ -118,7 +118,7 @@ void *realloc(void *ptr, size_t size) {
         ret = NULL;
     }
 
-    memcpy(ret, (void*)ptr, size);
+    memcpy(ret, ptr, size);
     free(ptr);
 
     return ret;
@@ -200,7 +200,7 @@ int wctomb(char *dest, wchar_t wc) {
     return ret;
 }
 
-size_t mbstowcs (wchar_t *dest, const char *src, size_t size) {
+size_t mbstowcs(wchar_t *dest, const char *src, size_t size) {
     if (src == NULL) return 0;
 
     int ret;
@@ -238,6 +238,5 @@ void exit(int status) {
 }
 
 void abort(void) {
-    while (1)
-        asm volatile ("hlt");
+    BS->Exit(IM, EFI_ABORTED, 0, NULL);
 }

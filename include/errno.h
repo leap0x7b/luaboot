@@ -38,4 +38,5 @@ char *strerror(int error);
 #define EPIPE 32
 #define EDOM 33
 #define ERANGE 34
-#define EUNKERR 35
+#define EUNIMPL 35
+#define EUNKERR 36

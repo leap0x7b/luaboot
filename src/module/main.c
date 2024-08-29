@@ -1,7 +1,7 @@
 #include <stdint.h>
+#include <string.h>
 #include <luaboot/io.h>
 #include <luaboot/efi.h>
-#include <luaboot/string.h>
 #include <luaboot/luamod.h>
 #include <lua/lua.h>
 #include <lua/lauxlib.h>
@@ -101,19 +101,19 @@ static int inl(lua_State *L) {
     return 1;
 }
 
-typedef struct {
+struct cpuid {
     uint32_t eax;
     uint32_t ebx;
     uint32_t ecx;
     uint32_t edx;
-} cpuid_t;
+};
 
-static void _cpuid(uint32_t leaf, cpuid_t *dest) {
+static void _cpuid(uint32_t leaf, struct cpuid *dest) {
     asm volatile("cpuid" : "=a"((*dest).eax), "=b"((*dest).ebx), "=c"((*dest).ecx), "=d"((*dest).edx) : "a"(leaf));
 }
 
 static int cpuid_tostring(lua_State* L) { 
-    cpuid_t *cpuid_ud = luaL_checkudata(L, 1, "cpuid");
+    struct cpuid *cpuid_ud = luaL_checkudata(L, 1, "cpuid");
 
     char string[13];
     *(uint32_t *)&string[0] = cpuid_ud->ebx;
@@ -133,7 +133,7 @@ static const struct luaL_Reg cpuid_meth[] = {
 static int cpuid(lua_State *L) {
     uint32_t leaf = luaL_checkinteger(L, 1);
 
-    cpuid_t *ret = lua_newuserdata(L, sizeof(cpuid_t));
+    struct cpuid *ret = lua_newuserdata(L, sizeof(struct cpuid));
     _cpuid(leaf, ret);
 
     luaL_newmetatable(L, "cpuid");

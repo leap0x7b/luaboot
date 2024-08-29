@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stddef.h>
-#include <luaboot/stdlib.h>
+#include <stdlib.h>
 
 #define STATE_SIZE  312
 #define MIDDLE      156

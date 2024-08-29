@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
-#include <luaboot/stdlib.h>
+#include <stdlib.h>
 #include <luaboot/printf.h>
 #include <luaboot/efi.h>
 
@@ -40,8 +40,9 @@ void efi_console_write(uint16_t *s) {
 }
 
 static void _printf_callback(char c, void *) {
+    char ch[] = {c, 0};
     wchar_t *dest = malloc(4);
-    mbstowcs(dest, &c, 4);
+    mbstowcs(dest, ch, 4);
     ST->ConOut->OutputString(ST->ConOut, dest);
 }
 

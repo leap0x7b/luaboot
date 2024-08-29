@@ -1,6 +1,6 @@
 #include <stddef.h>
+#include <string.h>
 #include <luaboot/e9.h>
-#include <luaboot/string.h>
 #include <luaboot/io.h>
 #include <luaboot/printf.h>
 

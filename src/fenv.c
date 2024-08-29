@@ -1,6 +1,6 @@
+#include <stdlib.h>
 #include <fenv.h>
 #include <luaboot/e9.h>
-#include <luaboot/stdlib.h>
 
 static void fenvstub(const char* nam) {
     e9_printf("fenvstub: reached %s!\n", nam);

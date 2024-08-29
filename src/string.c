@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <luaboot/string.h>
+#include <string.h>
 
 void *memchr(const void *s, int c, size_t size) {
     uint8_t *p = (uint8_t *)s;

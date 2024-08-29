@@ -29,7 +29,7 @@ static inline uint64_t strftime(char *s, uint64_t max,
     const char *format,
     const struct tm *tm) {
     (void)max; (void)format; (void)tm;
-    strcpy(s, "<idfk time>");
+    strcpy(s, "<unimplemented>");
     return 11;
 }
 time_t mktime(const struct tm* tm);

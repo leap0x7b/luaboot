@@ -1,6 +1,3 @@
-[submodule "external/arith64"]
-	path = external/arith64
-	url = https://github.com/glitchub/arith64
 [submodule "external/gdtoa"]
 	path = external/gdtoa
 	url = https://github.com/embeddedartistry/gdtoa
@@ -10,3 +7,7 @@
 [submodule "external/flanterm"]
 	path = external/flanterm
 	url = https://github.com/mintsuki/flanterm
+[submodule "external/cc-runtime"]
+	path = external/cc-runtime
+	url = https://github.com/osdev0/cc-runtime
+	branch = trunk

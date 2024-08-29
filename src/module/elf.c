@@ -1,9 +1,9 @@
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <elf.h>
 #include <errno.h>
-#include <luaboot/stdio.h>
-#include <luaboot/stdlib.h>
-#include <luaboot/string.h>
 #include <luaboot/luamod.h>
 #include <lua/lua.h>
 #include <lua/lauxlib.h>

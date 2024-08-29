@@ -4,6 +4,7 @@
 
 ifneq ($(VERBOSE), 1)
 	Q := @
+	DD_STATUS := status=none
 endif
 
 SHELL = bash
@@ -31,10 +32,8 @@ CHARDFLAGS := \
 	-I$(INCLUDEDIR) \
 	-I$(EXTERNALDIR) \
 	-I$(EXTERNALDIR)/limine-efi/inc \
-	-I$(EXTERNALDIR)/limine-efi/inc/x86_64 \
-	-I$(EXTERNALDIR)/openlibm/include \
+	-I$(EXTERNALDIR)/limine-efi/inc/efi \
 	-I$(EXTERNALDIR)/gdtoa/include \
-	-I$(EXTERNALDIR)/openlibm/src \
 	-DNO_FENV_H \
 	-nostdlib -std=gnu2x \
 	-fshort-wchar -ffreestanding \
@@ -43,7 +42,11 @@ CHARDFLAGS := \
 	-mcmodel=kernel -MMD -MP \
 	-mno-red-zone -msoft-float
 ASHARDFLAGS := -felf64 -MD -MP
-LDHARDFLAGS := -T$(EXTERNALDIR)/limine-efi/gnuefi/elf_x86_64_efi.lds -nostdlib -z max-page-size=0x1000 -static -pie --no-dynamic-linker
+LDHARDFLAGS := \
+	-T$(EXTERNALDIR)/limine-efi/src/elf_x86_64_efi.lds \
+	-nostdlib -static \
+	-zmax-page-size=0x1000 \
+	-pie --no-dynamic-linker
 
 LUABOOT := $(BUILDDIR)/luaboot.efi
 LUABOOT_ELF := $(BUILDDIR)/luaboot.elf
@@ -54,6 +57,10 @@ OBJ := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(CFILES:.c=.c.o))
 ASMOBJ := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(ASMFILES:.s=.s.o))
 DEPS := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(CFILES:.c=.c.d))
 ASMDEPS := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(ASMFILES:.s=.s.d))
+
+CC_RUNTIME_CFILES := $(shell find $(EXTERNALDIR)/cc-runtime -name *.c)
+CC_RUNTIME_OBJ := $(patsubst $(EXTERNALDIR)/%, $(BUILDDIR)/%, $(CC_RUNTIME_CFILES:.c=.c.o))
+CC_RUNTIME_DEPS := $(patsubst $(EXTERNALDIR)/%, $(BUILDDIR)/%, $(CC_RUNTIME_CFILES:.c=.c.d))
 
 LUA_OBJS = $(BUILDDIR)/lua/lapi.c.o $(BUILDDIR)/lua/lcode.c.o $(BUILDDIR)/lua/lctype.c.o $(BUILDDIR)/lua/ldebug.c.o $(BUILDDIR)/lua/ldo.c.o $(BUILDDIR)/lua/ldump.c.o $(BUILDDIR)/lua/lfunc.c.o $(BUILDDIR)/lua/lgc.c.o $(BUILDDIR)/lua/linit.c.o $(BUILDDIR)/lua/llex.c.o \
 	$(BUILDDIR)/lua/lmem.c.o $(BUILDDIR)/lua/lobject.c.o $(BUILDDIR)/lua/lopcodes.c.o $(BUILDDIR)/lua/lparser.c.o $(BUILDDIR)/lua/lstate.c.o $(BUILDDIR)/lua/lstring.c.o $(BUILDDIR)/lua/ltable.c.o \
@@ -73,13 +80,14 @@ $(LUABOOT): $(LUABOOT_ELF)
 	@$(MKCWD)
 	@echo -e "[OBJCOPY]\t$(@:$(BUILDDIR)/%=%)"
 	$(Q)$(OBJCOPY) -O binary $< $@
+	$(Q)dd if=/dev/zero of=$@ bs=4096 count=0 seek=$$(( ($$(wc -c < $@) + 4095) / 4096 )) $(DD_STATUS)
 
-$(LUABOOT_ELF): $(BUILDDIR)/limine-efi/crt0-efi-x86_64.S.o $(BUILDDIR)/limine-efi/reloc_x86_64.c.o $(BUILDDIR)/arith64/arith64.c.o $(LIBM_OBJ) $(GDTOA_OBJS) $(BUILDDIR)/flanterm/flanterm.c.o $(BUILDDIR)/flanterm/backends/fb.c.o $(LUA_OBJS) $(OBJ) $(ASMOBJ)
+$(LUABOOT_ELF): $(BUILDDIR)/limine-efi/crt0-efi-x86_64.S.o $(BUILDDIR)/limine-efi/reloc_x86_64.c.o $(CC_RUNTIME_OBJ) $(LIBM_OBJ) $(GDTOA_OBJS) $(BUILDDIR)/flanterm/flanterm.c.o $(BUILDDIR)/flanterm/backends/fb.c.o $(LUA_OBJS) $(OBJ) $(ASMOBJ)
 	@$(MKCWD)
 	@echo -e "[LD]\t\t$(@:$(BUILDDIR)/%=%)"
-	$(Q)$(LD) $(BUILDDIR)/limine-efi/crt0-efi-x86_64.S.o $(BUILDDIR)/limine-efi/reloc_x86_64.c.o $(BUILDDIR)/arith64/arith64.c.o $(LIBM_OBJ) $(GDTOA_OBJS) $(BUILDDIR)/flanterm/flanterm.c.o $(BUILDDIR)/flanterm/backends/fb.c.o $(LUA_OBJS) $(OBJ) $(ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -o $@
+	$(Q)$(LD) $(BUILDDIR)/limine-efi/crt0-efi-x86_64.S.o $(BUILDDIR)/limine-efi/reloc_x86_64.c.o $(CC_RUNTIME_OBJ) $(LIBM_OBJ) $(GDTOA_OBJS) $(BUILDDIR)/flanterm/flanterm.c.o $(BUILDDIR)/flanterm/backends/fb.c.o $(LUA_OBJS) $(OBJ) $(ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -o $@
 
--include $(DEPS) $(ASMDEPS) $(LIBM_DEPS)
+-include $(CC_RUNTIME_DEPS) $(DEPS) $(ASMDEPS) $(LIBM_DEPS)
 
 $(BUILDDIR)/%.c.o: $(SRCDIR)/%.c
 	@$(MKCWD)
@@ -91,17 +99,17 @@ $(BUILDDIR)/%.s.o: $(SRCDIR)/%.s
 	@echo -e "[AS]\t\t$(<:$(SRCDIR)/%=%)"
 	$(Q)$(AS) $(ASHARDFLAGS) -I$(SRCDIR) $< -o $@
 
-$(BUILDDIR)/limine-efi/%.c.o: $(EXTERNALDIR)/limine-efi/gnuefi/%.c
+$(BUILDDIR)/limine-efi/%.c.o: $(EXTERNALDIR)/limine-efi/src/%.c
 	@$(MKCWD)
 	@echo -e "[CC]\t\t$(<:$(EXTERNALDIR)/%=%)"
 	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
 
-$(BUILDDIR)/limine-efi/%.S.o: $(EXTERNALDIR)/limine-efi/gnuefi/%.S
+$(BUILDDIR)/limine-efi/%.S.o: $(EXTERNALDIR)/limine-efi/src/%.S
 	@$(MKCWD)
 	@echo -e "[AS]\t\t$(<:$(EXTERNALDIR)/%=%)"
 	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
 
-$(BUILDDIR)/arith64/%.c.o: $(EXTERNALDIR)/arith64/%.c
+$(BUILDDIR)/cc-runtime/%.c.o: $(EXTERNALDIR)/cc-runtime/%.c
 	@$(MKCWD)
 	@echo -e "[CC]\t\t$(<:$(EXTERNALDIR)/%=%)"
 	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
@@ -130,7 +138,8 @@ run: all
 	@echo -e "[QEMU]\t\t$(LUABOOT:$(BUILDDIR)/%=%)"
 	$(Q)mkdir -p build/efi-root/EFI/BOOT
 	$(Q)cp $(LUABOOT) build/efi-root/EFI/BOOT/BOOTX64.EFI
-	$(Q)$(QEMU) -m $(QEMUMEMSIZE) $(QEMUFLAGS) -hda fat:rw:build/efi-root -bios ../kora/headstart/zig-cache/edk2-x86_64.fd
+	$(Q)cp $(LUABOOT_ELF) build/efi-root
+	$(Q)$(QEMU) -m $(QEMUMEMSIZE) $(QEMUFLAGS) -hda fat:rw:build/efi-root -bios /usr/share/OVMF/x64/OVMF.fd
 
 clean:
 	$(Q)$(RM)r $(BUILDDIR)
