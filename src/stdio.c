@@ -1,20 +1,21 @@
+#include <errno.h>
+#include <luaboot/e9.h>
+#include <luaboot/efi.h>
+#include <luaboot/flanterm.h>
+#include <luaboot/printf.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <time.h>
-#include <luaboot/e9.h>
-#include <luaboot/efi.h>
-#include <luaboot/flanterm.h>
 
-#define _stdin (FILE*)-1
-#define _stdout (FILE*)-2
+#define _stdin (FILE *)-1
+#define _stdout (FILE *)-2
 
 FILE *stdin = _stdin, *stdout = _stdout, *stderr = _stdout;
 
-static void _write_char(FILE* file, char ch) {
+static void _write_char(FILE *file, char ch) {
     errno = file->_errno = 0;
     if (file == _stdout) {
         if (ch == '\n')
@@ -40,12 +41,11 @@ void _put_char(char character) {
     _write_char(stdout, character);
 }
 
-int fflush(FILE* f) {
-    (void)f;
+int fflush(FILE *) {
     return 0;
 }
 
-int fprintf(FILE* out, const char* format, ...) {
+int fprintf(FILE *out, const char *format, ...) {
     va_list args;
     va_start(args, format);
 
@@ -63,7 +63,6 @@ size_t fread(void *ptr, size_t size, size_t count, FILE *restrict stream) {
     errno = stream->_errno = 0;
     if (stream == _stdin) {
         EFI_INPUT_KEY key = efi_console_read_key();
-        //wctomb(c, key.UnicodeChar);
         if (key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
             ptr = "\n";
             fprintf(stdout, "\n");
@@ -121,6 +120,18 @@ int feof(FILE *stream) {
     return stream->off == stream->seek_lookup(stream->arg, SEEK_END, 0, 0);
 }
 
+int printf(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    int ret = fprintf(stdout, format, args);
+    va_end(args);
+    return ret;
+}
+
+int vprintf(const char *format, va_list *args) {
+    return fprintf(stdout, format, args);
+}
+
 int getc(FILE *stream) {
     errno = stream->_errno = 0;
     if (!stream) {
@@ -140,9 +151,9 @@ int getc(FILE *stream) {
     }
 }
 
-void* fgets(void* s, uint64_t n, FILE* stream) {
+void *fgets(void *s, uint64_t n, FILE *stream) {
     errno = 0;
-    uint8_t* data = (uint8_t*)s;
+    uint8_t *data = (uint8_t *)s;
     uint64_t c = 0;
     while (c < n) {
         int chr = getc(stream);
@@ -161,7 +172,6 @@ void* fgets(void* s, uint64_t n, FILE* stream) {
             return s;
         }
         if (chr == '\b' && (stream == _stdout || stream->_is_text)) {
-            // backspace
             if (!c) continue;
             c--;
             *(--data) = 0;
@@ -178,7 +188,6 @@ static int64_t uefi_tty_read(void *arg, void *buf, uint64_t off, uint64_t max) {
     for (uint64_t i = 0; i < max; i++) {
         EFI_INPUT_KEY key = efi_console_read_key();
         char *c = malloc(512);
-        //wctomb(c, key.UnicodeChar);
         if (key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
             c = "\n";
             fprintf(stdout, "\n");
@@ -218,7 +227,7 @@ static int64_t flanterm_tty_write(void *arg, void *buf, uint64_t off, uint64_t m
 static int64_t serial_read(void *arg, void *buf, uint64_t off, uint64_t max) {
     EFI_SERIAL_IO_PROTOCOL *serial;
     EFI_GUID serial_guid = EFI_SERIAL_IO_PROTOCOL_GUID;
-    EFI_STATUS status = BS->LocateProtocol(&serial_guid, NULL, (void**)&serial);
+    EFI_STATUS status = BS->LocateProtocol(&serial_guid, NULL, (void **)&serial);
     serial->SetAttributes(serial, 115200, 0, 1000, NoParity, 8, OneStopBit);
     serial->Read(serial, &max, buf);
     return max;
@@ -227,7 +236,7 @@ static int64_t serial_read(void *arg, void *buf, uint64_t off, uint64_t max) {
 static int64_t serial_write(void *arg, void *buf, uint64_t off, uint64_t max) {
     EFI_SERIAL_IO_PROTOCOL *serial;
     EFI_GUID serial_guid = EFI_SERIAL_IO_PROTOCOL_GUID;
-    EFI_STATUS status = BS->LocateProtocol(&serial_guid, NULL, (void**)&serial);
+    EFI_STATUS status = BS->LocateProtocol(&serial_guid, NULL, (void **)&serial);
     serial->SetAttributes(serial, 115200, 0, 1000, NoParity, 8, OneStopBit);
     serial->Write(serial, &max, buf);
     return max;
@@ -320,8 +329,7 @@ EFI_FILE_HANDLE uefi_get_volume() {
 bool _fopen(FILE *file, const char *path) {
     if (!strcmp(path, "/dev/console")) {
         file->read = uefi_tty_read;
-        //file->write = flanterm_tty_write;
-		file->write = uefi_tty_write;
+        file->write = flanterm_tty_write;
         file->_is_text = 1;
         file->_is_stream = 1;
         return 1;
@@ -337,14 +345,12 @@ bool _fopen(FILE *file, const char *path) {
         file->_is_stream = 1;
         return 1;
     } else if (!strcmp(path, "/dev/stdout")) {
-        //file->write = flanterm_tty_write;
-		file->write = uefi_tty_write;
+        file->write = flanterm_tty_write;
         file->_is_text = 1;
         file->_is_stream = 1;
         return 1;
     } else if (!strcmp(path, "/dev/stderr")) {
-        //file->write = flanterm_tty_write;
-		file->write = uefi_tty_write;
+        file->write = flanterm_tty_write;
         file->_is_text = 1;
         file->_is_stream = 1;
         return 1;
@@ -433,7 +439,7 @@ bool _fopen(FILE *file, const char *path) {
 FILE *fopen(const char *pathname, const char *mode) {
     errno = 0;
 
-    FILE* f = (FILE*)malloc(sizeof(FILE));
+    FILE *f = (FILE *)malloc(sizeof(FILE));
     if (!f) {
         errno = ENOMEM;
         return NULL;
@@ -444,7 +450,7 @@ FILE *fopen(const char *pathname, const char *mode) {
     f->_is_text = 0;
     f->_is_stream = 0;
     f->_errno = 0;
-    bool append = 0; 
+    bool append = 0;
 
     while (*mode) {
         char m = *mode++;
@@ -478,8 +484,10 @@ FILE *fopen(const char *pathname, const char *mode) {
             errno = EINVAL;
             return NULL;
         }
-        if (append) f->off = f->seek_lookup(f->arg, SEEK_END, 0, 0);
-        else f->off = 0;
+        if (append)
+            f->off = f->seek_lookup(f->arg, SEEK_END, 0, 0);
+        else
+            f->off = 0;
     } else {
         free(f);
         if (!errno) errno = EUNKERR;
@@ -507,9 +515,36 @@ int remove(const char *path) {
     return 0;
 }
 
-FILE *freopen(const char *, const char *, FILE *file) { errno = file->_errno = EUNIMPL; e9_printf("todo: freopen\n"); return file; }
-int rename(const char *, const char *) { errno = EUNIMPL; e9_printf("todo: rename\n"); return 0; }
-int setvbuf(FILE *file, char *, int, size_t) { errno = file->_errno = EUNIMPL; e9_printf("todo: setvbuf\n"); return 0; }
-FILE *tmpfile(void) { errno = EUNIMPL; e9_printf("todo: tmpfile\n"); return NULL; }
-char *tmpnam(char *) { e9_printf("todo: tmpnam\n"); return "temp"; }
-void ungetc(int, FILE *file) { errno = file->_errno = EUNIMPL; e9_printf("todo: ungetc\n"); }
+FILE *freopen(const char *, const char *, FILE *file) {
+    errno = file->_errno = EUNIMPL;
+    e9_printf("todo: freopen\n");
+    return file;
+}
+
+int rename(const char *, const char *) {
+    errno = EUNIMPL;
+    e9_printf("todo: rename\n");
+    return 0;
+}
+
+int setvbuf(FILE *file, char *, int, size_t) {
+    errno = file->_errno = EUNIMPL;
+    e9_printf("todo: setvbuf\n");
+    return 0;
+}
+
+FILE *tmpfile(void) {
+    errno = EUNIMPL;
+    e9_printf("todo: tmpfile\n");
+    return NULL;
+}
+
+char *tmpnam(char *) {
+    e9_printf("todo: tmpnam\n");
+    return "temp";
+}
+
+void ungetc(int, FILE *file) {
+    errno = file->_errno = EUNIMPL;
+    e9_printf("todo: ungetc\n");
+}

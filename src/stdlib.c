@@ -1,10 +1,10 @@
-#include <stdint.h>
-#include <stddef.h>
-#include <string.h>
-#include <stdlib.h>
 #include <errno.h>
-#include <luaboot/efi.h>
 #include <luaboot/e9.h>
+#include <luaboot/efi.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 int atoi(const char *str) {
     return (int)atol(str);
@@ -43,8 +43,7 @@ int64_t strtol(const char *str, char **dest, int base) {
         str++;
     }
 
-    while (!(*str < '0' || (base < 10 && *str >= base + '0') || (base >= 10 && ((*str > '9' && *str < 'A') ||
-            (*str > 'F' && *str < 'a') || *str > 'f')))) {
+    while (!(*str < '0' || (base < 10 && *str >= base + '0') || (base >= 10 && ((*str > '9' && *str < 'A') || (*str > 'F' && *str < 'a') || *str > 'f')))) {
         v *= base;
         if (*str >= '0' && *str <= (base < 10 ? base + '0' : '9'))
             v += (*str) - '0';
@@ -69,7 +68,7 @@ const char *getenv(const char *name) {
     mbstowcs((wchar_t *)&wcname, name, 256);
 
     EFI_GUID guid = EFI_GLOBAL_VARIABLE;
-    EFI_STATUS status = RT->GetVariable((wchar_t*)&wcname, &guid, NULL, &len, &tmp);
+    EFI_STATUS status = RT->GetVariable((wchar_t *)&wcname, &guid, NULL, &len, &tmp);
     if (EFI_ERROR(status) || len < 1 || !(ret = malloc((len) + 1))) {
         return NULL;
     }
@@ -105,7 +104,7 @@ void *calloc(size_t num, size_t size) {
 
 void *realloc(void *ptr, size_t size) {
     void *ret = NULL;
- 
+
     if (!ptr) return malloc(size);
     if (!size) {
         free(ptr);
@@ -168,12 +167,13 @@ int mbtowc(wchar_t *dest, const char *src, size_t size) {
             arg = ((*src & 0x1F) << 6) | (*(src + 1) & 0x3F);
             ret = 2;
         } else if ((*src & 16) == 0 && size > 1) {
-            arg = ((*src & 0xF) << 12) | ((*(src + 1) & 0x3F) << 6)|(*(src + 2) & 0x3F);
+            arg = ((*src & 0xF) << 12) | ((*(src + 1) & 0x3F) << 6) | (*(src + 2) & 0x3F);
             ret = 3;
         } else if ((*src & 8) == 0 && size > 2) {
-            arg = ((*src & 0x7) << 18) | ((*(src + 1) & 0x3F) << 12) | ((*(src + 2) & 0x3F) << 6) | (*(src+3) & 0x3F);
+            arg = ((*src & 0x7) << 18) | ((*(src + 1) & 0x3F) << 12) | ((*(src + 2) & 0x3F) << 6) | (*(src + 3) & 0x3F);
             ret = 4;
-        } else return -1;
+        } else
+            return -1;
     }
 
     if (dest) *dest = arg;
@@ -192,8 +192,8 @@ int wctomb(char *dest, wchar_t wc) {
         ret = 2;
     } else {
         *dest = ((wc >> 12) & 0x0F) | 0xE0;
-        *(dest + 1)= ((wc >> 6) & 0x3F) | 0x80;
-        *(dest + 2)= (wc & 0x3F) | 0x80;
+        *(dest + 1) = ((wc >> 6) & 0x3F) | 0x80;
+        *(dest + 2) = (wc & 0x3F) | 0x80;
         ret = 3;
     }
 

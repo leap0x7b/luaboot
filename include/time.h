@@ -26,11 +26,13 @@ static inline clock_t clock() {
     return /* we spent approximately no time at all */ 0;
 }
 static inline uint64_t strftime(char *s, uint64_t max,
-    const char *format,
-    const struct tm *tm) {
-    (void)max; (void)format; (void)tm;
+                                const char *format,
+                                const struct tm *tm) {
+    (void)max;
+    (void)format;
+    (void)tm;
     strcpy(s, "<unimplemented>");
     return 11;
 }
-time_t mktime(const struct tm* tm);
+time_t mktime(const struct tm *tm);
 static inline time_t difftime(time_t l, time_t r) { return l - r; }

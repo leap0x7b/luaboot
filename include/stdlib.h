@@ -1,7 +1,7 @@
 #pragma once
-#include <stddef.h>
 #include <gdtoa.h>
 #include <luaboot/efi.h>
+#include <stddef.h>
 
 #define EXIT_SUCCESS EFI_SUCCESS
 #define EXIT_FAILURE EFI_ABORTED

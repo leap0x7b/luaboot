@@ -1,9 +1,9 @@
+#include <flanterm/backends/fb.h>
+#include <flanterm/flanterm.h>
+#include <luaboot/efi.h>
+#include <luaboot/printf.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <luaboot/efi.h>
-#include <flanterm/flanterm.h>
-#include <flanterm/backends/fb.h>
-#include <luaboot/printf.h>
 
 struct flanterm_context *flanterm;
 
@@ -109,8 +109,7 @@ void flanterm_init(EFI_GRAPHICS_OUTPUT_PROTOCOL *gop) {
         NULL, NULL,
         NULL, 0, 0, 1,
         0, 0,
-        0
-    );
+        0);
 }
 
 static void _printf_callback(char c, void *) {

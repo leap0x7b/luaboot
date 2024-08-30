@@ -22,10 +22,10 @@ extern "C" {
 #endif
 
 typedef struct {
-	uint32_t __control_word;
-	uint32_t __status_word;
-	uint32_t __unused_fields[5];
-	uint32_t __mxcsr;
+    uint32_t __control_word;
+    uint32_t __status_word;
+    uint32_t __unused_fields[5];
+    uint32_t __mxcsr;
 } fenv_t;
 
 typedef uint16_t fexcept_t;
@@ -46,6 +46,6 @@ int feupdateenv(const fenv_t *);
 }
 #endif
 
-#define FE_DFL_ENV ((const fenv_t *) -1)
+#define FE_DFL_ENV ((const fenv_t *)-1)
 
 #endif // _FENV_H

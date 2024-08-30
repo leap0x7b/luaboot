@@ -62,7 +62,7 @@ CC_RUNTIME_CFILES := $(shell find $(EXTERNALDIR)/cc-runtime -name *.c)
 CC_RUNTIME_OBJ := $(patsubst $(EXTERNALDIR)/%, $(BUILDDIR)/%, $(CC_RUNTIME_CFILES:.c=.c.o))
 CC_RUNTIME_DEPS := $(patsubst $(EXTERNALDIR)/%, $(BUILDDIR)/%, $(CC_RUNTIME_CFILES:.c=.c.d))
 
-LUA_OBJS = $(BUILDDIR)/lua/lapi.c.o $(BUILDDIR)/lua/lcode.c.o $(BUILDDIR)/lua/lctype.c.o $(BUILDDIR)/lua/ldebug.c.o $(BUILDDIR)/lua/ldo.c.o $(BUILDDIR)/lua/ldump.c.o $(BUILDDIR)/lua/lfunc.c.o $(BUILDDIR)/lua/lgc.c.o $(BUILDDIR)/lua/linit.c.o $(BUILDDIR)/lua/llex.c.o \
+LUA_OBJ = $(BUILDDIR)/lua/lapi.c.o $(BUILDDIR)/lua/lcode.c.o $(BUILDDIR)/lua/lctype.c.o $(BUILDDIR)/lua/ldebug.c.o $(BUILDDIR)/lua/ldo.c.o $(BUILDDIR)/lua/ldump.c.o $(BUILDDIR)/lua/lfunc.c.o $(BUILDDIR)/lua/lgc.c.o $(BUILDDIR)/lua/linit.c.o $(BUILDDIR)/lua/llex.c.o \
 	$(BUILDDIR)/lua/lmem.c.o $(BUILDDIR)/lua/lobject.c.o $(BUILDDIR)/lua/lopcodes.c.o $(BUILDDIR)/lua/lparser.c.o $(BUILDDIR)/lua/lstate.c.o $(BUILDDIR)/lua/lstring.c.o $(BUILDDIR)/lua/ltable.c.o \
 	$(BUILDDIR)/lua/ltm.c.o $(BUILDDIR)/lua/lundump.c.o $(BUILDDIR)/lua/lvm.c.o $(BUILDDIR)/lua/lzio.c.o $(BUILDDIR)/lua/ltests.c.o $(BUILDDIR)/lua/lauxlib.c.o $(BUILDDIR)/lua/lbaselib.c.o $(BUILDDIR)/lua/loadlib.c.o $(BUILDDIR)/lua/lcorolib.c.o $(BUILDDIR)/lua/ltablib.c.o \
 	$(BUILDDIR)/lua/liolib.c.o $(BUILDDIR)/lua/loslib.c.o $(BUILDDIR)/lua/lstrlib.c.o $(BUILDDIR)/lua/lmathlib.c.o $(BUILDDIR)/lua/lutf8lib.c.o $(BUILDDIR)/lua/ldblib.c.o
@@ -71,7 +71,7 @@ LIBM_CFILES := $(shell find $(EXTERNALDIR)/musl-libm -name *.c)
 LIBM_OBJ := $(patsubst $(EXTERNALDIR)/musl-libm/%, $(BUILDDIR)/musl-libm/%, $(LIBM_CFILES:.c=.c.o))
 LIBM_DEPS := $(patsubst $(EXTERNALDIR)/musl-libm/%, $(BUILDDIR)/musl-libm/%, $(LIBM_CFILES:.c=.c.d))
 
-GDTOA_OBJS = $(BUILDDIR)/gdtoa/dmisc.c.o $(BUILDDIR)/gdtoa/dtoa.c.o $(BUILDDIR)/gdtoa/g__fmt.c.o $(BUILDDIR)/gdtoa/g_ddfmt.c.o $(BUILDDIR)/gdtoa/g_dfmt.c.o $(BUILDDIR)/gdtoa/g_ffmt.c.o $(BUILDDIR)/gdtoa/g_Qfmt.c.o $(BUILDDIR)/gdtoa/g_xfmt.c.o $(BUILDDIR)/gdtoa/g_xLfmt.c.o $(BUILDDIR)/gdtoa/gdtoa.c.o $(BUILDDIR)/gdtoa/gethex.c.o $(BUILDDIR)/gdtoa/gmisc.c.o $(BUILDDIR)/gdtoa/hd_init.c.o $(BUILDDIR)/gdtoa/hexnan.c.o $(BUILDDIR)/gdtoa/misc.c.o $(BUILDDIR)/gdtoa/smisc.c.o $(BUILDDIR)/gdtoa/strtod.c.o $(BUILDDIR)/gdtoa/strtodg.c.o $(BUILDDIR)/gdtoa/strtodI.c.o $(BUILDDIR)/gdtoa/strtof.c.o $(BUILDDIR)/gdtoa/strtoId.c.o $(BUILDDIR)/gdtoa/strtoIdd.c.o $(BUILDDIR)/gdtoa/strtoIf.c.o $(BUILDDIR)/gdtoa/strtoIg.c.o $(BUILDDIR)/gdtoa/strtoIQ.c.o $(BUILDDIR)/gdtoa/strtoIx.c.o $(BUILDDIR)/gdtoa/strtoIxL.c.o $(BUILDDIR)/gdtoa/strtopd.c.o $(BUILDDIR)/gdtoa/strtopdd.c.o $(BUILDDIR)/gdtoa/strtopf.c.o $(BUILDDIR)/gdtoa/strtopQ.c.o $(BUILDDIR)/gdtoa/strtopx.c.o $(BUILDDIR)/gdtoa/strtopxL.c.o $(BUILDDIR)/gdtoa/strtord.c.o $(BUILDDIR)/gdtoa/strtordd.c.o $(BUILDDIR)/gdtoa/strtorf.c.o $(BUILDDIR)/gdtoa/strtorQ.c.o $(BUILDDIR)/gdtoa/strtorx.c.o $(BUILDDIR)/gdtoa/strtorxL.c.o $(BUILDDIR)/gdtoa/sum.c.o $(BUILDDIR)/gdtoa/ulp.c.o
+GDTOA_OBJ = $(BUILDDIR)/gdtoa/dmisc.c.o $(BUILDDIR)/gdtoa/dtoa.c.o $(BUILDDIR)/gdtoa/g__fmt.c.o $(BUILDDIR)/gdtoa/g_ddfmt.c.o $(BUILDDIR)/gdtoa/g_dfmt.c.o $(BUILDDIR)/gdtoa/g_ffmt.c.o $(BUILDDIR)/gdtoa/g_Qfmt.c.o $(BUILDDIR)/gdtoa/g_xfmt.c.o $(BUILDDIR)/gdtoa/g_xLfmt.c.o $(BUILDDIR)/gdtoa/gdtoa.c.o $(BUILDDIR)/gdtoa/gethex.c.o $(BUILDDIR)/gdtoa/gmisc.c.o $(BUILDDIR)/gdtoa/hd_init.c.o $(BUILDDIR)/gdtoa/hexnan.c.o $(BUILDDIR)/gdtoa/misc.c.o $(BUILDDIR)/gdtoa/smisc.c.o $(BUILDDIR)/gdtoa/strtod.c.o $(BUILDDIR)/gdtoa/strtodg.c.o $(BUILDDIR)/gdtoa/strtodI.c.o $(BUILDDIR)/gdtoa/strtof.c.o $(BUILDDIR)/gdtoa/strtoId.c.o $(BUILDDIR)/gdtoa/strtoIdd.c.o $(BUILDDIR)/gdtoa/strtoIf.c.o $(BUILDDIR)/gdtoa/strtoIg.c.o $(BUILDDIR)/gdtoa/strtoIQ.c.o $(BUILDDIR)/gdtoa/strtoIx.c.o $(BUILDDIR)/gdtoa/strtoIxL.c.o $(BUILDDIR)/gdtoa/strtopd.c.o $(BUILDDIR)/gdtoa/strtopdd.c.o $(BUILDDIR)/gdtoa/strtopf.c.o $(BUILDDIR)/gdtoa/strtopQ.c.o $(BUILDDIR)/gdtoa/strtopx.c.o $(BUILDDIR)/gdtoa/strtopxL.c.o $(BUILDDIR)/gdtoa/strtord.c.o $(BUILDDIR)/gdtoa/strtordd.c.o $(BUILDDIR)/gdtoa/strtorf.c.o $(BUILDDIR)/gdtoa/strtorQ.c.o $(BUILDDIR)/gdtoa/strtorx.c.o $(BUILDDIR)/gdtoa/strtorxL.c.o $(BUILDDIR)/gdtoa/sum.c.o $(BUILDDIR)/gdtoa/ulp.c.o
 
 all: luaboot
 luaboot: $(LUABOOT)
@@ -82,10 +82,10 @@ $(LUABOOT): $(LUABOOT_ELF)
 	$(Q)$(OBJCOPY) -O binary $< $@
 	$(Q)dd if=/dev/zero of=$@ bs=4096 count=0 seek=$$(( ($$(wc -c < $@) + 4095) / 4096 )) $(DD_STATUS)
 
-$(LUABOOT_ELF): $(BUILDDIR)/limine-efi/crt0-efi-x86_64.S.o $(BUILDDIR)/limine-efi/reloc_x86_64.c.o $(CC_RUNTIME_OBJ) $(LIBM_OBJ) $(GDTOA_OBJS) $(BUILDDIR)/flanterm/flanterm.c.o $(BUILDDIR)/flanterm/backends/fb.c.o $(LUA_OBJS) $(OBJ) $(ASMOBJ)
+$(LUABOOT_ELF): $(BUILDDIR)/limine-efi/crt0-efi-x86_64.S.o $(BUILDDIR)/limine-efi/reloc_x86_64.c.o $(CC_RUNTIME_OBJ) $(LIBM_OBJ) $(GDTOA_OBJ) $(BUILDDIR)/flanterm/flanterm.c.o $(BUILDDIR)/flanterm/backends/fb.c.o $(LUA_OBJ) $(OBJ) $(ASMOBJ)
 	@$(MKCWD)
 	@echo -e "[LD]\t\t$(@:$(BUILDDIR)/%=%)"
-	$(Q)$(LD) $(BUILDDIR)/limine-efi/crt0-efi-x86_64.S.o $(BUILDDIR)/limine-efi/reloc_x86_64.c.o $(CC_RUNTIME_OBJ) $(LIBM_OBJ) $(GDTOA_OBJS) $(BUILDDIR)/flanterm/flanterm.c.o $(BUILDDIR)/flanterm/backends/fb.c.o $(LUA_OBJS) $(OBJ) $(ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -o $@
+	$(Q)$(LD) $(BUILDDIR)/limine-efi/crt0-efi-x86_64.S.o $(BUILDDIR)/limine-efi/reloc_x86_64.c.o $(CC_RUNTIME_OBJ) $(LIBM_OBJ) $(GDTOA_OBJ) $(BUILDDIR)/flanterm/flanterm.c.o $(BUILDDIR)/flanterm/backends/fb.c.o $(LUA_OBJ) $(OBJ) $(ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -o $@
 
 -include $(CC_RUNTIME_DEPS) $(DEPS) $(ASMDEPS) $(LIBM_DEPS)
 

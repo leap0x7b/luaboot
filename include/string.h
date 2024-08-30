@@ -1,6 +1,6 @@
 #pragma once
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 void *memchr(const void *s, int c, size_t size);
 void *memset(void *buffer, int value, size_t size);

@@ -1,7 +1,7 @@
-#include <stdlib.h>
-#include <time.h>
 #include <luaboot/e9.h>
 #include <luaboot/efi.h>
+#include <stdlib.h>
+#include <time.h>
 
 static struct tm tm;
 
@@ -81,7 +81,7 @@ static time_t mktime_efi(EFI_TIME *t) {
     return mktime(&tm);
 }
 
-struct tm *localtime (const time_t *) {
+struct tm *localtime(const time_t *) {
     EFI_TIME t;
     RT->GetTime(&t, NULL);
 

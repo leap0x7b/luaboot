@@ -1,3 +1,6 @@
+#pragma once
+// clang-format off
+
 #ifndef errmap
 #define errmap(...)
 #endif

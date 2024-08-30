@@ -1,6 +1,6 @@
-#include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 void *memchr(const void *s, int c, size_t size) {
@@ -84,7 +84,7 @@ char *strncpy(char *dest, const char *src, size_t n) {
 
     for (i = 0; i < n && src[i]; i++)
         dest[i] = src[i];
-    for ( ; i < n; i++)
+    for (; i < n; i++)
         dest[i] = 0;
 
     return dest;
@@ -132,14 +132,14 @@ char *strpbrk(const char *s, const char *chrs) {
     size_t n = 0;
     while (s[n]) {
         if (strchr(chrs, s[n]))
-            return (char*)(s + n);
+            return (char *)(s + n);
         n++;
     }
     return NULL;
 }
 
 int strcmp(const char *s1, const char *s2) {
-    for (size_t i = 0; ; i++) {
+    for (size_t i = 0;; i++) {
         char c1 = s1[i], c2 = s2[i];
         if (c1 != c2)
             return c1 < c2 ? -1 : 1;
@@ -166,7 +166,7 @@ size_t strspn(const char *s1, const char *s2) {
     while (*s1 && strchr(s2, *s1++))
         ret++;
 
-    return ret;    
+    return ret;
 }
 
 size_t strcspn(const char *s1, const char *s2) {
@@ -192,7 +192,7 @@ char *strstr(const char *str, const char *pattern) {
             break;
         }
 
-        if (found) return (char*)(&str[i]);
+        if (found) return (char *)(&str[i]);
     }
 
     return NULL;
@@ -211,6 +211,6 @@ char *strtok(char *str, const char *delim) {
     if (p == str)
         return p = 0;
 
-    p = *p ? *p = 0,p + 1 : 0;
+    p = *p ? *p = 0, p + 1 : 0;
     return str;
 }

@@ -1,12 +1,12 @@
+#include <elf.h>
+#include <errno.h>
+#include <lua/lauxlib.h>
+#include <lua/lua.h>
+#include <luaboot/luamod.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <elf.h>
-#include <errno.h>
-#include <luaboot/luamod.h>
-#include <lua/lua.h>
-#include <lua/lauxlib.h>
 
 typedef struct {
     Elf64_Ehdr *header;
@@ -15,23 +15,22 @@ typedef struct {
 } elf_t;
 
 static const struct luaL_Reg elf_meth[] = {
-    { "load", NULL },
-    { NULL, NULL }
-};
+    {"load", NULL},
+    {NULL, NULL}};
 
-#define push_ehdr_value(L, ehdr, name) \
+#define push_ehdr_value(L, ehdr, name)    \
     lua_pushinteger(L, header->e_##name); \
     lua_setfield(L, -2, "name");
 
-#define push_elf_ident(L, ehdr, name, offset) \
+#define push_elf_ident(L, ehdr, name, offset)    \
     lua_pushinteger(L, header->e_ident[offset]); \
     lua_setfield(L, -2, name);
 
-#define push_phdr_value(L, phdr, name) \
+#define push_phdr_value(L, phdr, name)  \
     lua_pushinteger(L, phdr->p_##name); \
     lua_setfield(L, -2, "name");
 
-#define push_shdr_value(L, shdr, name) \
+#define push_shdr_value(L, shdr, name)   \
     lua_pushinteger(L, shdr->sh_##name); \
     lua_setfield(L, -2, "name");
 
@@ -71,12 +70,12 @@ int parse_elf(lua_State *L) {
     (*elf)->section_headers = malloc(header->e_shentsize * header->e_shnum);
 
     int i = 0;
-    if (!memcmp(header->e_ident, ELFMAG, SELFMAG) &&   /* magic match? */
-        header->e_ident[EI_CLASS] == ELFCLASS64 &&     /* 64 bit? */
-        header->e_ident[EI_DATA] == ELFDATA2LSB &&     /* LSB? */
-        header->e_type == ET_EXEC &&                   /* executable object? */
-        header->e_machine == EM_AMD64 &&               /* architecture match? */
-        header->e_phnum > 0) {                         /* has program headers? */
+    if (!memcmp(header->e_ident, ELFMAG, SELFMAG) && /* magic match? */
+        header->e_ident[EI_CLASS] == ELFCLASS64 &&   /* 64 bit? */
+        header->e_ident[EI_DATA] == ELFDATA2LSB &&   /* LSB? */
+        header->e_type == ET_EXEC &&                 /* executable object? */
+        header->e_machine == EM_AMD64 &&             /* architecture match? */
+        header->e_phnum > 0) {                       /* has program headers? */
         lua_newtable(L);
 
         lua_newtable(L);
@@ -106,8 +105,8 @@ int parse_elf(lua_State *L) {
         lua_newtable(L);
         Elf64_Phdr *phdr;
         for (phdr = (Elf64_Phdr *)(buf + header->e_phoff), i = 0;
-            i < header->e_phnum;
-            i++, phdr = (Elf64_Phdr *)((uint8_t *)phdr + header->e_phentsize)) {
+             i < header->e_phnum;
+             i++, phdr = (Elf64_Phdr *)((uint8_t *)phdr + header->e_phentsize)) {
             lua_newtable(L);
             push_phdr_value(L, phdr, type);
             push_phdr_value(L, phdr, flags);
@@ -125,8 +124,8 @@ int parse_elf(lua_State *L) {
         lua_newtable(L);
         Elf64_Shdr *shdr;
         for (shdr = (Elf64_Shdr *)(buf + header->e_shoff), i = 0;
-            i < header->e_shnum;
-            i++, shdr = (Elf64_Shdr *)((uint8_t *)shdr + header->e_shentsize)) {
+             i < header->e_shnum;
+             i++, shdr = (Elf64_Shdr *)((uint8_t *)shdr + header->e_shentsize)) {
             lua_newtable(L);
             lua_pushstring(L, get_shdr_name(header, shdr));
             lua_setfield(L, -2, "name");

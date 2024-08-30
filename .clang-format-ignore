@@ -1,0 +1,5 @@
+external
+src/printf.c
+include/luaboot/printf.h
+*.s
+*.S

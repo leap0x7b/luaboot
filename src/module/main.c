@@ -1,10 +1,10 @@
+#include <lua/lauxlib.h>
+#include <lua/lua.h>
+#include <luaboot/efi.h>
+#include <luaboot/io.h>
+#include <luaboot/luamod.h>
 #include <stdint.h>
 #include <string.h>
-#include <luaboot/io.h>
-#include <luaboot/efi.h>
-#include <luaboot/luamod.h>
-#include <lua/lua.h>
-#include <lua/lauxlib.h>
 
 static int framebuffer_put_pixel(lua_State *L) {
     uint32_t x = lua_tointeger(L, 1);
@@ -15,37 +15,36 @@ static int framebuffer_put_pixel(lua_State *L) {
     return 0;
 }
 
-static int framebuffer_index(lua_State* L) { 
+static int framebuffer_index(lua_State *L) {
     uint32_t **fb = luaL_checkudata(L, 1, "framebuffer");
     int index = luaL_checkinteger(L, 2);
     lua_pushinteger(L, (*fb)[index - 1]);
-    return 1; 
+    return 1;
 }
 
-static int framebuffer_newindex(lua_State* L) { 
+static int framebuffer_newindex(lua_State *L) {
     uint32_t **fb = luaL_checkudata(L, 1, "framebuffer");
     int index = luaL_checkinteger(L, 2);
     int value = luaL_checkinteger(L, 3);
     (*fb)[index - 1] = value;
-    return 0; 
+    return 0;
 }
 
-static int framebuffer_len(lua_State* L) { 
+static int framebuffer_len(lua_State *L) {
     uint32_t **_ = luaL_checkudata(L, 1, "framebuffer");
     (void)_;
     lua_pushinteger(L, GOP->Mode->FrameBufferSize);
-    return 1; 
+    return 1;
 }
 
 // jesee we need to cook
 static const struct luaL_Reg fb_array_meth[] = {
-    { "__index", framebuffer_index },
-    { "__newindex", framebuffer_newindex },
-    { "__len", framebuffer_len },
-    { NULL, NULL }
-};
+    {"__index", framebuffer_index},
+    {"__newindex", framebuffer_newindex},
+    {"__len", framebuffer_len},
+    {NULL, NULL}};
 
-static int framebuffer_as_array(lua_State* L) {
+static int framebuffer_as_array(lua_State *L) {
     uint32_t **fb = lua_newuserdata(L, GOP->Mode->FrameBufferSize);
     *fb = (uint32_t *)GOP->Mode->FrameBufferBase;
     luaL_getmetatable(L, "framebuffer");
@@ -54,10 +53,9 @@ static int framebuffer_as_array(lua_State* L) {
 }
 
 static const struct luaL_Reg fb_meth[] = {
-    { "putPixel", framebuffer_put_pixel },
-    { "asArray", framebuffer_as_array },
-    { NULL, NULL }
-};
+    {"putPixel", framebuffer_put_pixel},
+    {"asArray", framebuffer_as_array},
+    {NULL, NULL}};
 
 static int outb(lua_State *L) {
     uint16_t port = luaL_checkinteger(L, 1);
@@ -112,7 +110,7 @@ static void _cpuid(uint32_t leaf, struct cpuid *dest) {
     asm volatile("cpuid" : "=a"((*dest).eax), "=b"((*dest).ebx), "=c"((*dest).ecx), "=d"((*dest).edx) : "a"(leaf));
 }
 
-static int cpuid_tostring(lua_State* L) { 
+static int cpuid_tostring(lua_State *L) {
     struct cpuid *cpuid_ud = luaL_checkudata(L, 1, "cpuid");
 
     char string[13];
@@ -122,13 +120,12 @@ static int cpuid_tostring(lua_State* L) {
     string[12] = '\0';
 
     lua_pushstring(L, string);
-    return 1; 
+    return 1;
 }
 
 static const struct luaL_Reg cpuid_meth[] = {
-    { "__tostring", cpuid_tostring },
-    { NULL, NULL }
-};
+    {"__tostring", cpuid_tostring},
+    {NULL, NULL}};
 
 static int cpuid(lua_State *L) {
     uint32_t leaf = luaL_checkinteger(L, 1);
@@ -160,16 +157,15 @@ static int cpuid(lua_State *L) {
 }
 
 static const struct luaL_Reg lib[] = {
-    { "outb", outb },
-    { "inb", inb },
-    { "outw", outw },
-    { "inw", inw },
-    { "outl", outl },
-    { "inl", inl },
-    { "cpuid", cpuid },
-    { "parseElf", parse_elf },
-    { NULL, NULL }
-};
+    {"outb", outb},
+    {"inb", inb},
+    {"outw", outw},
+    {"inw", inw},
+    {"outl", outl},
+    {"inl", inl},
+    {"cpuid", cpuid},
+    {"parseElf", parse_elf},
+    {NULL, NULL}};
 
 static uint16_t linear_masks_to_bpp(uint32_t red_mask, uint32_t green_mask,
                                     uint32_t blue_mask, uint32_t alpha_mask) {

@@ -1,7 +1,7 @@
 #pragma once
 
 typedef struct {
-    char* decimal_point;
+    char *decimal_point;
 } locale_t;
 extern locale_t _currentlocale;
 #define localeconv() (&_currentlocale)
@@ -16,5 +16,5 @@ extern locale_t _currentlocale;
 static inline char *setlocale(int t, const char *loc) {
     (void)t;
     (void)loc;
-    return (char*)"";
+    return (char *)"";
 }

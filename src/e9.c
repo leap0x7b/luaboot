@@ -1,8 +1,8 @@
-#include <stddef.h>
-#include <string.h>
 #include <luaboot/e9.h>
 #include <luaboot/io.h>
 #include <luaboot/printf.h>
+#include <stddef.h>
+#include <string.h>
 
 void e9_write_char(char c) {
     io_outb(0xe9, c);

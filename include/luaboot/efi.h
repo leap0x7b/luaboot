@@ -1,7 +1,7 @@
 #pragma once
-#include <stdint.h>
-#include <stdarg.h>
 #include <efi.h>
+#include <stdarg.h>
+#include <stdint.h>
 
 extern EFI_HANDLE IM;
 extern EFI_SYSTEM_TABLE *ST;

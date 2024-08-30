@@ -1,7 +1,7 @@
 #pragma once
-#include <luaboot/efi.h>
-#include <flanterm/flanterm.h>
 #include <flanterm/backends/fb.h>
+#include <flanterm/flanterm.h>
+#include <luaboot/efi.h>
 
 extern struct flanterm_context *flanterm;
 

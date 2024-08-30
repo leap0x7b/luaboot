@@ -1,8 +1,7 @@
 #pragma once
-#include <stdint.h>
+#include <stdarg.h>
 #include <stddef.h>
-#include <luaboot/printf.h>
-#include <luaboot/efi.h>
+#include <stdint.h>
 
 typedef struct FILE {
     uint8_t _is_text, _can_read, _can_write, _is_stream;
@@ -32,12 +31,14 @@ int fseek(FILE *, long offset, int whence);
 int ftell(FILE *);
 int fflush(FILE *);
 void *fgets(void *, uint64_t, FILE *);
-FILE *fopen(const char *, const char*);
+FILE *fopen(const char *, const char *);
 FILE *freopen(const char *, const char *, FILE *);
 size_t fread(void *, size_t, size_t, FILE *);
 size_t fwrite(const void *, size_t, size_t, FILE *);
 char *tmpnam(char *s);
 FILE *tmpfile(void);
+int printf(const char *format, ...);
+int vprintf(const char *format, va_list *args);
 int getc(FILE *);
 void ungetc(int c, FILE *);
 void clearerr(FILE *);

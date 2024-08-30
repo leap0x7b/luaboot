@@ -1,8 +1,8 @@
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <luaboot/printf.h>
 #include <luaboot/efi.h>
+#include <luaboot/printf.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 EFI_HANDLE IM;
 EFI_SYSTEM_TABLE *ST;
