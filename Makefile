@@ -22,8 +22,8 @@ LD = ld.lld
 OBJCOPY = llvm-objcopy
 QEMU = qemu-system-x86_64
 
-CFLAGS ?= -Og -gdwarf
-ASFLAGS ?= -g -Fdwarf
+CFLAGS ?= -Os
+ASFLAGS ?=
 LDFLAGS ?=
 QEMUFLAGS ?= -machine q35,accel=kvm:whpx:hvf:tcg -no-reboot -no-shutdown -debugcon stdio
 QEMUMEMSIZE ?= 2G

@@ -223,7 +223,7 @@
 
 #else			/* }{ */
 
-#define LUA_ROOT	"/luaboot/"
+#define LUA_ROOT	"/boot/luaboot/"
 #define LUA_LDIR	LUA_ROOT
 #define LUA_CDIR	LUA_ROOT
 
